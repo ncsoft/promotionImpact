@@ -58,6 +58,7 @@ promotionImpact <- function(data, promotion
 
   requireNamespace("Rcpp", quietly = TRUE)
   data <- as.data.frame(data)
+  promotion <- as.data.frame(promotion)
 
   ## 입력한 필드가 데이터에 포함되었는지 체크
   check.fields <- function(data, field) {
