@@ -8,7 +8,7 @@ promotionImpact는 타겟 지표(일매출, DAU 등)에 대한 프로모션의 �
 R에서 아래 코드를 실행하시면 됩니다.
 
 ```
-devtools::install_github("danbi-ncsoft/promotionImpact")
+devtools::install_github("ncsoft/promotionImpact")
 ```
 
 ## 사용 방법
@@ -43,7 +43,7 @@ sim.data  # 일별 매출 시뮬레이션 데이터
 
 예제 데이터의 일 매출은 이들 프로모션의 효과 및 트렌드/주기성 요소, 월초일(매월 1일)의 급증 효과 및 기타 랜덤하게 발생하는 오차를 포함하고 있습니다.
 
-<img src="https://github.com/taeheeahn/images_promotionImpact/blob/master/simulated_daily_sales.png?raw=true">
+<img src="https://github.com/ncsoft/promotionImpact/blob/master/resources/simulated_daily_sales.png?raw=true">
 
 이 일 매출 데이터로부터 각 프로모션 유형별 효과를 분리하여 추정하고자 하는 것이 목표입니다.
 
@@ -105,7 +105,7 @@ pri1$smoothvar$smoothing_graph
 ```
 
 <p align="center">
-<img width="450" height="400" src="https://github.com/taeheeahn/images_promotionImpact/blob/master/smoothing_function.png?raw=true" style="float: center; zoom:60%">
+<img width="450" height="400" src="https://github.com/ncsoft/promotionImpact/blob/master/resources/smoothing_function.png?raw=true" style="float: center; zoom:60%">
 </p>
 
 프로모션 시작일의 효과가 가장 크고, 이후 프로모션이 진행됨에 따라 효과가 감소하는 형태입니다. 
@@ -130,9 +130,9 @@ pri1$model$model  # 최종적으로 만들어진 선형모형 객체 (일반적�
 pri1$model$final_input_data   # 해당 모형에 입력된 데이터 (변수변환 등 전처리 이후 데이터)
 pri1$model$fit_plot   # 모델의 target vs fitted plot
 ```
-<img src="https://github.com/taeheeahn/images_promotionImpact/blob/master/model_call_new.PNG?raw=true" style="float: center; zoom:60%">
+<img src="https://github.com/ncsoft/promotionImpact/blob/master/resources/model_call_new.PNG?raw=true" style="float: center; zoom:60%">
 
-<img src="https://github.com/taeheeahn/images_promotionImpact/blob/master/fit_plot.png?raw=true" style="float: center; zoom:60%">
+<img src="https://github.com/ncsoft/promotionImpact/blob/master/resources/fit_plot.png?raw=true" style="float: center; zoom:60%">
 
 위 그래프는 로그 및 차분 변환 이후의 타겟 지표에 대한 model fit을 보여 줍니다.
 
@@ -142,7 +142,7 @@ pri1$model$fit_plot   # 모델의 target vs fitted plot
 pri1$model$trend_period_graph_with_target   # 트렌드+주기성 컴포넌트를 타겟 지표와 함께 보기
 ```
 
-<img src="https://github.com/taeheeahn/images_promotionImpact/blob/master/trend_periodicity_with_target.png?raw=true" style="float: center; zoom:60%">
+<img src="https://github.com/ncsoft/promotionImpact/blob/master/resources/trend_periodicity_with_target.png?raw=true" style="float: center; zoom:60%">
 
 
 
@@ -204,7 +204,7 @@ pri3$structural_breakpoint
 pri3$model$final_input_data
 ```
 
-<img src="https://github.com/taeheeahn/images_promotionImpact/blob/master/dummy_variables.PNG?raw=true" style="float: center; zoom:100%">
+<img src="https://github.com/ncsoft/promotionImpact/blob/master/resources/dummy_variables.PNG?raw=true" style="float: center; zoom:100%">
 
 프로모션 A, B, C, D, E의 변수가, 프로모션 진행중이면 1, 아니면 0의 dummy변수로 입력되었음을 알 수 있습니다. 'structure' 변수는 1에서 시작하여 구조변화점마다 2, 3, ... 등으로 증가하는 factor변수입니다.
 
@@ -223,7 +223,7 @@ pri3$effects
 요약하면, promotionImpact는 타겟 지표의 변동이 아래와 같은 세 가지 구성요소로 설명될 수 있을 때, 프로모션 효과를 측정 및 비교할 수 있게 해 줍니다.
 
 <p align="center">
-<img width="500" height="280" src="https://github.com/taeheeahn/images_promotionImpact/blob/master/model_concept.png?raw=true" />
+<img width="500" height="280" src="https://github.com/ncsoft/promotionImpact/blob/master/resources/model_concept.png?raw=true" />
 </p>
 
 특히, 타겟 시계열(일별 매출, AU 등)로부터 트렌드/주기성/구조변화 컴포넌트를 추정하여 이를 통제한 상태에서, 프로모션 효과의 시간에 따른 변화 양상을 고려한(smoothing) 변수처리를 통해 프로모션 효과를 분리/측정하는 것이 핵심 기능이라고 할 수 있습니다.
