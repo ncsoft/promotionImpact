@@ -138,22 +138,24 @@ promotionImpact <- function(data, promotion
       promotion <- promotion %>% dplyr::mutate(residual = residual/n)
       promotion <- promotion %>% dplyr::select(-n)
 
+      # smoothed variables 생성
+      smoothvar <- create.smooth.vars(target.data = data[ ,c('date', 'value')], promotion.data = promotion,
+                                      smooth.except.date = smooth.except.date, smooth.bandwidth = smooth.bandwidth,
+                                      smooth.origin = smooth.origin, smooth.var.sum = smooth.var.sum, smooth.scale = 'minmax')
+
     } else if (ncol(promotion) == 6) {
 
       names(promotion) <- c('pro_id','start_date','end_date','pro_tag','date','value')
 
+      # smoothed variables 생성
+      smoothvar <- create.smooth.vars(target.data = data[ ,c('date', 'value')], promotion.data = promotion,
+                                      smooth.except.date = smooth.except.date, smooth.bandwidth = smooth.bandwidth,
+                                      smooth.origin = smooth.origin, smooth.var.sum = smooth.var.sum, smooth.scale = 'max')
+
     }
-
-    ## 여기까지 하면, promotion은 프로모션별 일별 '매출(결제금액)' 또는 프로모션별 일별 '통제변수 모형의 잔차(효과)' 데이터로 완성
-
-    # smoothed variables 생성
-    smoothvar <- create.smooth.vars(target.data = data[ ,c('date', 'value')], promotion.data = promotion,
-                                    smooth.except.date = smooth.except.date, smooth.bandwidth = smooth.bandwidth,
-                                    smooth.origin = smooth.origin, smooth.var.sum = smooth.var.sum)
 
     # 최종 입력 데이터
     input.data <- data %>% dplyr::left_join(smoothvar$data, by = c('date'='date', 'value'='value'))
-
 
     # 모델링
     model <- promotion.model(input.data, time.field = 'date', target.field = 'value', dummy.field = dummy.field,
@@ -534,7 +536,7 @@ create.dummy.vars <- function(target.data, promotion.data, tovar.col = 'pro_id')
 
 
 create.smooth.vars <- function(target.data, promotion.data, smooth.except.date = NULL, smooth.bandwidth = 2,
-                               smooth.origin = 'all', smooth.var.sum = TRUE) {
+                               smooth.origin = 'all', smooth.var.sum = TRUE, smooth.scale = 'minmax') {
 
 
   ## smooth.except.date를 숫자로 준 경우 및 01일자를 1로만 기입한 경우 01로 만드는 처리
@@ -630,8 +632,11 @@ create.smooth.vars <- function(target.data, promotion.data, smooth.except.date =
         # smooth.list에 smoothing function 값 저장 및 scaling
         smooth.list[[i]][[j]] <- locpoly.result
 
-        smooth.list[[i]][[j]] <- smooth.list[[i]][[j]] / max(smooth.list[[i]][[j]])
-        # smooth.list[[i]][[j]] <- ( smooth.list[[i]][[j]] - min(smooth.list[[i]][[j]]) )/ ( max(smooth.list[[i]][[j]]) - min(smooth.list[[i]][[j]]) )
+        if (smooth.scale == 'minmax') {
+          smooth.list[[i]][[j]] <- ( smooth.list[[i]][[j]] - min(smooth.list[[i]][[j]]) )/ ( max(smooth.list[[i]][[j]]) - min(smooth.list[[i]][[j]]) )
+        } else if (smooth.scale == 'max') {
+          smooth.list[[i]][[j]] <- smooth.list[[i]][[j]] / max(smooth.list[[i]][[j]])
+        }
 
         smooth.means.all[paste(i,j,sep='_')] <- smooth.list[[i]][[j]]   # 전체 프로모션에 대하여 smoothing 평균하는 경우를 위한 데이터
 
