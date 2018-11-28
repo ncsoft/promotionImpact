@@ -41,6 +41,7 @@
 #' @importFrom strucchange breakpoints
 #' @importFrom reshape2 melt
 #' @importFrom data.table dcast
+#' @importFrom utils capture.output
 #' @export promotionImpact
 
 
