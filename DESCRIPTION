@@ -1,0 +1,13 @@
+Package: promotionImpact
+Type: Package
+Title: Analysis & Measurement of Promotion Effectiveness
+Version: 0.1.0
+Author: NCsoft AnalysisModeling Team <thahn25@ncsoft.com> <windy0126@ncsoft.com>
+Maintainer: NCsoft AnalysisModeling Team <thahn25@ncsoft.com> <windy0126@ncsoft.com>
+Description: promotionImpact is for analysis and measurement of promotion effectiveness on a given target variable(e.g. daily sales). This package provides convenient tools for converting promotion schedule into dummy or smoothed predictor variables, and examining the effects of these variables controlled for trend/periodicity/structural change or some prespeficied variables(e.g. start of a month).
+License: BSD-3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.0.1
+Depends: R (>= 3.4.3)
+Imports: KernSmooth (>= 2.23.15), MASS (>= 7.3.49), Rcpp (>= 0.12.17), data.table (>= 1.11.4), dplyr (>= 0.7.6), ggplot2 (>= 3.0.0), ggpubr (>= 0.1.8), prophet (>= 0.3.0.1), reshape2 (>= 1.4.3), scales (>= 1.0.0), stringr (>= 1.3.1), strucchange (>= 1.5.1)
