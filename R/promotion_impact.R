@@ -54,7 +54,7 @@ promotionImpact <- function(data, promotion
                             ,smooth.bandwidth = 2, smooth.origin = 'all', smooth.var.sum = TRUE
                             ,logged = FALSE, differencing = FALSE) {
 
-
+  requireNamespace("Rcpp", quietly = TRUE)
   data <- as.data.frame(data)
 
   ## 입력한 필드가 데이터에 포함되었는지 체크
@@ -246,6 +246,7 @@ promotion.model <- function(data, time.field = 'date', target.field = 'value', d
                             ,trend = FALSE, period = NULL, structural.change = FALSE
                             ,trend.param = 0.05, period.param = 3) {
 
+  requireNamespace("Rcpp", quietly = TRUE)
   data.fields <- names(data)
   data <- as.data.frame(data)
 
