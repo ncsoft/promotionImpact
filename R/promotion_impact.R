@@ -35,6 +35,7 @@
 #' @import prophet
 #' @import ggplot2
 #' @import scales
+#' @import MASS
 #' @importFrom ggpubr ggarrange
 #' @importFrom KernSmooth locpoly
 #' @importFrom stringr str_detect
