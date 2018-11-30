@@ -35,7 +35,6 @@
 #' @import prophet
 #' @import ggplot2
 #' @import scales
-#' @import MASS
 #' @importFrom ggpubr ggarrange
 #' @importFrom KernSmooth locpoly
 #' @importFrom stringr str_detect
@@ -56,7 +55,6 @@ promotionImpact <- function(data, promotion
                             ,smooth.bandwidth = 2, smooth.origin = 'all', smooth.var.sum = TRUE
                             ,logged = FALSE, differencing = FALSE) {
 
-  requireNamespace("Rcpp", quietly = TRUE)
   data <- as.data.frame(data)
   promotion <- as.data.frame(promotion)
 
@@ -112,19 +110,28 @@ promotionImpact <- function(data, promotion
 
 
       # 통제변수만 넣고 모형 적합
-      invisible(
-        capture.output(
-          suppressMessages(
-          control <- promotion.model(data, time.field = 'date', target.field = 'value', dummy.field = dummy.field,
-                                     trend = trend, period = period, structural.change = structural.change,
-                                     trend.param = trend.param, period.param = period.param, logged=F, differencing=F)
+      if (is.null(dummy.field) == TRUE & trend == FALSE & is.null(period) == TRUE & structural.change == FALSE) {
+
+        residuals <- data$value   # 통제변수가 없다면 타겟 지표 자체가 프로모션의 일별 효과
+
+      } else {
+        invisible(
+          capture.output(
+            suppressMessages(
+              control <- promotion.model(data, time.field = 'date', target.field = 'value', dummy.field = dummy.field,
+                                         trend = trend, period = period, structural.change = structural.change,
+                                         trend.param = trend.param, period.param = period.param, logged=FALSE, differencing=FALSE)
+            )
           )
         )
-      )
 
-      # residual : 일별 잔차 데이터. 여기서의 잔차는 control$model의 잔차
+        residuals <- control$model$residuals   # 통제변수가 있다면 통제변수만 넣은 모형의 잔차가 프로모션의 일별 효과
+
+      }
+
+      # residual : 일별 잔차 데이터. 이들 잔차를 프로모션의 일별 효과로 간주.
       residual <- data.frame(date = data[,'date'])
-      residual[,'residual'] <- control$model$residuals
+      residual[,'residual'] <- residuals
 
       # residual 값을 기존 promotion에 join
       promotion <- promotion %>% dplyr::left_join(residual, by = c('date'='date'))
