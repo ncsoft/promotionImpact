@@ -31,7 +31,6 @@
 #' @importFrom reshape2 melt
 #' @importFrom data.table dcast
 #' @importFrom utils capture.output
-#' @importFrom magrittr %>%
 #' @export promotionImpact
 
 
