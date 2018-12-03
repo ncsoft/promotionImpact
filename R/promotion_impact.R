@@ -57,6 +57,7 @@ promotionImpact <- function(data, promotion
 
   requireNamespace("Rcpp", quietly = TRUE)
   requireNamespace("prophet", quietly = TRUE)
+  requireNamespace("dplyr", quietly = TRUE)
 
   data <- as.data.frame(data)
   promotion <- as.data.frame(promotion)
