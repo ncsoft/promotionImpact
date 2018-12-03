@@ -20,6 +20,10 @@
 #' @param logged TRUE to take logs to the target variable and the trend/period component
 #' @param differencing TRUE to first difference the target variable, smoothed regressors, and the trend/period component values
 #'
+#' @export promotionImpact
+
+
+#### promotionImpact 메인 함수 ####
 #' @import dplyr
 #' @import Rcpp
 #' @import prophet
@@ -32,11 +36,6 @@
 #' @importFrom reshape2 melt
 #' @importFrom data.table dcast
 #' @importFrom utils capture.output
-#' @export promotionImpact
-
-
-#### promotionImpact 메인 함수 ####
-
 promotionImpact <- function(data, promotion
                             ,time.field = 'date', target.field = 'value', dummy.field = NULL
                             ,trend = FALSE, period = NULL, structural.change = FALSE
