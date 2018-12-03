@@ -642,7 +642,7 @@ create.smooth.vars <- function(target.data, promotion.data, smooth.except.date =
 
     if (smooth.scale == 'minmax') {
       smooth.means.tag[[i]]$smooth_mean <- (smooth.means.tag[[i]]$smooth_mean - min(smooth.means.tag[[i]]$smooth_mean)) / (max(smooth.means.tag[[i]]$smooth_mean) - min(smooth.means.tag[[i]]$smooth_mean))
-    } else {
+    } else if (smooth.scale == 'max') {
       smooth.means.tag[[i]]$smooth_mean <- smooth.means.tag[[i]]$smooth_mean / max(smooth.means.tag[[i]]$smooth_mean)
     }
   }
@@ -653,7 +653,7 @@ create.smooth.vars <- function(target.data, promotion.data, smooth.except.date =
 
   if (smooth.scale == 'minmax') {
     smooth.means.all$smooth_mean <- (smooth.means.all$smooth_mean - min(smooth.means.all$smooth_mean)) / (max(smooth.means.all$smooth_mean) - min(smooth.means.all$smooth_mean))
-  } else {
+  } else if (smooth.scale == 'max') {
     smooth.means.all$smooth_mean <- smooth.means.all$smooth_mean / max(smooth.means.all$smooth_mean)
   }
 
