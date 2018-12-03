@@ -44,9 +44,6 @@ promotionImpact <- function(data, promotion
                             ,smooth.bandwidth = 2, smooth.origin = 'all', smooth.var.sum = TRUE
                             ,logged = FALSE, differencing = FALSE) {
 
-  requireNamespace("Rcpp", quietly = TRUE)
-  requireNamespace("prophet", quietly = TRUE)
-  requireNamespace("dplyr", quietly = TRUE)
 
   data <- as.data.frame(data)
   promotion <- as.data.frame(promotion)
