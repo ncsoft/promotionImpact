@@ -1,13 +1,3 @@
-#### promotionImpact ####
-## 함수 리스트 ##
-# promotionImpact : 메인 함수
-# promotion.model : 모델링 함수
-# create.dummy.vars : dummy 변수 생성 함수
-# create.smooth.vars : smoothing 변수 생성 함수
-# value_fit_plot : plotting용 함수
-# format_time : 시간값 변환 함수
-
-
 #' promotionImpact
 #'
 #' promotionImpact is for analysis & measurement of the effectiveness of promotions, controlling for some prespeficied or estimated control variables.
