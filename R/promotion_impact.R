@@ -630,11 +630,7 @@ create.smooth.vars <- function(target.data, promotion.data, smooth.except.date =
         # smooth.list에 smoothing function 값 저장 및 scaling
         smooth.list[[i]][[j]] <- locpoly.result
 
-        if (smooth.scale == 'minmax') {
-          smooth.list[[i]][[j]] <- ( smooth.list[[i]][[j]] - min(smooth.list[[i]][[j]]) )/ ( max(smooth.list[[i]][[j]]) - min(smooth.list[[i]][[j]]) )
-        } else if (smooth.scale == 'max') {
-          smooth.list[[i]][[j]] <- smooth.list[[i]][[j]] / max(smooth.list[[i]][[j]])
-        }
+        smooth.list[[i]][[j]] <- smooth.list[[i]][[j]] / max(smooth.list[[i]][[j]])
 
         smooth.means.all[paste(i,j,sep='_')] <- smooth.list[[i]][[j]]   # 전체 프로모션에 대하여 smoothing 평균하는 경우를 위한 데이터
 
@@ -644,16 +640,22 @@ create.smooth.vars <- function(target.data, promotion.data, smooth.except.date =
     # i번째 태깅에 대해 smoothing function 평균값을 저장(smoothing.means.tag)
     smooth.means.tag[[i]] <- data.frame(index = 1:401, smooth_mean = rowMeans(sapply(smooth.list[[i]], unlist)))
 
-    # smooth.means.tag[[i]]$smooth_mean <- (smooth.means.tag[[i]]$smooth_mean - min(smooth.means.tag[[i]]$smooth_mean)) / (max(smooth.means.tag[[i]]$smooth_mean) - min(smooth.means.tag[[i]]$smooth_mean))
-    smooth.means.tag[[i]]$smooth_mean <- smooth.means.tag[[i]]$smooth_mean / max(smooth.means.tag[[i]]$smooth_mean)
-
+    if (smooth.scale == 'minmax') {
+      smooth.means.tag[[i]]$smooth_mean <- (smooth.means.tag[[i]]$smooth_mean - min(smooth.means.tag[[i]]$smooth_mean)) / (max(smooth.means.tag[[i]]$smooth_mean) - min(smooth.means.tag[[i]]$smooth_mean))
+    } else {
+      smooth.means.tag[[i]]$smooth_mean <- smooth.means.tag[[i]]$smooth_mean / max(smooth.means.tag[[i]]$smooth_mean)
+    }
   }
 
   ## 전체 프로모션에 대한 smoothing function 평균값을 저장(smoothing.means.all)
   smooth.means.all['smooth_mean'] <- rowMeans(smooth.means.all[,2:ncol(smooth.means.all)])
   smooth.means.all <- smooth.means.all %>% dplyr::select(index, smooth_mean)
-  # smooth.means.all$smooth_mean <- (smooth.means.all$smooth_mean - min(smooth.means.all$smooth_mean)) / (max(smooth.means.all$smooth_mean) - min(smooth.means.all$smooth_mean))
-  smooth.means.all$smooth_mean <- smooth.means.all$smooth_mean / max(smooth.means.all$smooth_mean)
+
+  if (smooth.scale == 'minmax') {
+    smooth.means.all$smooth_mean <- (smooth.means.all$smooth_mean - min(smooth.means.all$smooth_mean)) / (max(smooth.means.all$smooth_mean) - min(smooth.means.all$smooth_mean))
+  } else {
+    smooth.means.all$smooth_mean <- smooth.means.all$smooth_mean / max(smooth.means.all$smooth_mean)
+  }
 
   ## smoothing function 결과 plot 저장(smoothing.graph)
   smoothing.graph <- list()
