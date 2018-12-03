@@ -19,11 +19,6 @@
 #' @param smooth.var.sum If TRUE, the smoothing values for times when multiple promotions in a single tag overlap will be the values from the latest promotion. Otherwise, the values will be added(default).
 #' @param logged TRUE to take logs to the target variable and the trend/period component
 #' @param differencing TRUE to first difference the target variable, smoothed regressors, and the trend/period component values
-#'
-#' @export promotionImpact
-
-
-#### promotionImpact 메인 함수 ####
 #' @import dplyr
 #' @import Rcpp
 #' @import prophet
@@ -36,6 +31,12 @@
 #' @importFrom reshape2 melt
 #' @importFrom data.table dcast
 #' @importFrom utils capture.output
+#' @importFrom magrittr %>%
+#' @export promotionImpact
+
+
+#### promotionImpact 메인 함수 ####
+
 promotionImpact <- function(data, promotion
                             ,time.field = 'date', target.field = 'value', dummy.field = NULL
                             ,trend = FALSE, period = NULL, structural.change = FALSE
