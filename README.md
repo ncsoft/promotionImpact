@@ -11,16 +11,12 @@ R에서 아래 코드를 실행하시면 됩니다.
 devtools::install_github("ncsoft/promotionImpact")
 ```
 
-R 3.5.0 이상 버전 사용 시, devtools가 3.4 버전까지 지원되어 패키지 설치가 제대로 안 될 수 있습니다. 이 경우 아래와 같이 devtools 버전에 3.5를 임의로 추가 후, 패키지 설치를 진행하면 됩니다.
-
-```
-library(devtools)
-find_rtools() # R 3.5.0과 호환되는 Rtools버전이 발견되지 않는다고 에러 메시지가 뜨는 경우, 아래 코드 실행
-assignInNamespace("version_info", 
-                 c(devtools:::version_info,
-                  list("3.5" = list(version_min = "3.3.0", version_max = "99.99.99", path = "bin"))), "devtools")
-find_rtools() # TRUE가 나오면 다시 위의 패키지 설치 코드 실행
-```
+혹시 사용자의 R 환경에 아래와 같은 패키지가 설치되어 있는 경우, 
+해당 패키지들은 미리 제거하고 위 코드를 실행하시면 됩니다.
+- prophet
+- Rcpp
+- RcppEigen
+- rstan
 
 ## 사용 방법
 먼저, 아래의 데이터들이 필요합니다.
