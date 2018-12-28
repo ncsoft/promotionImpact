@@ -8,7 +8,7 @@
 #' @param target.field Specify the target field of 'data'.
 #' @param dummy.field Specify the additional time dummies of 'data'.
 #' @param trend TRUE to incorporate trend component, FALSE to exclude the trend component.
-#' @param period NULL to exclude any periodicity from the model, 'auto' to automatically determine the period, certain numeric value(e.g. '30' for month) to manually specify the period
+#' @param period NULL to exclude any periodicity from the model, 'auto' to automatically determine the period, certain numeric value(e.g. '30.5' for month) to manually specify the period
 #' @param trend.param Flexibility of trend component. Default is 0.05, and as this value becomes larger, the trend component will be more flexible.
 #' @param period.param Flexibility of period component. Default is 3, and as this value becomes larger, the period component will be more flexible.
 #' @param var.type 'smooth' to use smoothed promotion variables, 'dummy' to use dummy promotion variables
