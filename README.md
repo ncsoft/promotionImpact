@@ -12,24 +12,21 @@ devtools::install_github("ncsoft/promotionImpact")
 ```
 
 혹시 사용자의 R 환경에 아래와 같은 패키지가 설치되어 있는 경우, 
-해당 패키지들은 미리 제거하고 위 코드를 실행하시면 됩니다.
+해당 패키지들은 미리 제거하고 위 코드를 실행해야 정상적으로 설치 됩니다.
 - prophet
 - Rcpp
 - RcppEigen
 - rstan
 
 ## 사용 방법
-먼저, 아래의 데이터들이 필요합니다.
+먼저, 아래의 데이터들이 필요합니다 (참고로 promotionImpact 에는 연습을 위한 샘플 데이터가 포함되어 있습니다).
 
  - 일별 타겟 지표 데이터 (예 - 일별 매출, 일별 AU)
 
  - 프로모션 일정 데이터 (프로모션 ID, 시작/끝 날짜, 프로모션 유형 포함)
-
 ```
-setwd('./promotionImpact/resources') # Rdata 포함한 directory
-sim.data  # 일별 매출 시뮬레이션 데이터
+promotionImpact::sim.data  # 일별 매출 시뮬레이션 데이터
 ```
-
 |     dt     | simulated_sales |
 | :--------: | :-------------: |
 | 2015-02-11 |  1,601,948,810  |
@@ -38,7 +35,9 @@ sim.data  # 일별 매출 시뮬레이션 데이터
 |    ...     |       ...       |
 | 2017-09-25 |  1,492,506,224  |
 
-	sim.promotion # 프로모션 일정 시뮬레이션 데이터
+```
+promotionImpact::sim.promotion # 프로모션 일정 시뮬레이션 데이터
+```
 | pro_id        | start_dt     | end_dt     | tag_info   |
 |:----------------------:|:-------------:|:-----------:|:-----------:|
 | pro_1_1  | 2015-02-16 | 2015-03-14 |    A     |
@@ -160,7 +159,7 @@ pri1$model$trend_period_graph_with_target   # 트렌드+주기성 컴포넌트�
 이를 활용하여 프로모션 효과의 양상을 추정하려면, 프로모션 데이터를 아래와 같이 입력합니다.
 
 ```
-sim.promotion.sales  # 프로모션별 일별 결제금액 시뮬레이션 데이터
+promotionImpact::sim.promotion.sales  # 프로모션별 일별 결제금액 시뮬레이션 데이터
 ```
 
 |  pro_id  |  start_dt  |   end_dt   | tag_info |     dt     |    payment    |
