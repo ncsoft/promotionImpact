@@ -38,11 +38,11 @@
 
 promotionImpact <- function(data, promotion
                             ,time.field = 'date', target.field = 'value', dummy.field = NULL
-                            ,trend = FALSE, period = NULL, structural.change = FALSE
+                            ,trend = TRUE, period = 'auto', structural.change = FALSE
                             ,trend.param = 0.05, period.param = 3
                             ,var.type = 'smooth', smooth.except.date = NULL
                             ,smooth.bandwidth = 2, smooth.origin = 'all', smooth.var.sum = TRUE
-                            ,logged = FALSE, differencing = FALSE) {
+                            ,logged = TRUE, differencing = TRUE) {
 
 
   data <- as.data.frame(data)
