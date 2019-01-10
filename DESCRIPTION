@@ -1,7 +1,7 @@
 Package: promotionImpact
 Type: Package
 Title: Analysis & Measurement of Promotion Effectiveness
-Version: 0.1.1
+Version: 0.1.2
 Author: NCsoft AnalysisModeling Team <thahn25@ncsoft.com> <windy0126@ncsoft.com>
 Maintainer: NCsoft AnalysisModeling Team <thahn25@ncsoft.com> <windy0126@ncsoft.com>
 Description: promotionImpact is for analysis and measurement of promotion effectiveness on a given target variable(e.g. daily sales). This package provides convenient tools for converting promotion schedule into dummy or smoothed predictor variables, and examining the effects of these variables controlled for trend/periodicity/structural change or some prespeficied variables(e.g. start of a month).

@@ -244,8 +244,8 @@ promotionImpact <- function(data, promotion
 # period.param : 주기성 컴포넌트의 유연성을 조정하는 파라미터. 아 값이 클수록 동적으로 변하는 주기성 적합.
 
 promotion.model <- function(data, time.field = 'date', target.field = 'value', dummy.field = NULL
-                            ,logged = FALSE, differencing = FALSE
-                            ,trend = FALSE, period = NULL, structural.change = FALSE
+                            ,logged = TRUE, differencing = TRUE
+                            ,trend = TRUE, period = 'auto', structural.change = FALSE
                             ,trend.param = 0.05, period.param = 3) {
 
   requireNamespace("Rcpp", quietly = TRUE)
