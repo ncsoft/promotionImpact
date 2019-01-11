@@ -6,7 +6,7 @@
 \usage{
 promotionImpact(data, promotion, time.field = "date",
   target.field = "value", dummy.field = NULL, trend = TRUE,
-  period = 'auto', structural.change = FALSE, trend.param = 0.05,
+  period = "auto", structural.change = FALSE, trend.param = 0.05,
   period.param = 3, var.type = "smooth", smooth.except.date = NULL,
   smooth.bandwidth = 2, smooth.origin = "all", smooth.var.sum = TRUE,
   logged = TRUE, differencing = TRUE)
@@ -24,7 +24,7 @@ promotionImpact(data, promotion, time.field = "date",
 
 \item{trend}{TRUE to incorporate trend component, FALSE to exclude the trend component.}
 
-\item{period}{NULL to exclude any periodicity from the model, 'auto' to automatically determine the period, certain numeric value(e.g. '30' for month) to manually specify the period}
+\item{period}{NULL to exclude any periodicity from the model, 'auto' to automatically determine the period, certain numeric value(e.g. '30.5' for month) to manually specify the period}
 
 \item{structural.change}{TRUE to incorporate structural changes in the intercept(baseline)}
 
