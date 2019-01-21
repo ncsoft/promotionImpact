@@ -241,7 +241,7 @@ promotionImpact <- function(data, promotion
 # period : 주기성(NULL이면 주기성 없음, 'auto'이면 주기성 자동 추정, 기타 숫자값을 입력하면 해당 주기로 모델링)
 # structural.change : 구조 변화 포함 여부(TRUE이면 구조변화 포함, FALSE이면 구조변화 포함하지 않음)
 # trend.param : 트렌드 컴포넌트의 유연성을 조정하는 파라미터. 이 값이 클수록 동적으로 변하는 트렌드 적합.
-# period.param : 주기성 컴포넌트의 유연성을 조정하는 파라미터. 아 값이 클수록 동적으로 변하는 주기성 적합.
+# period.param : 주기성 컴포넌트의 유연성을 조정하는 파라미터. 이 값이 클수록 동적으로 변하는 주기성 적합.
 
 promotion.model <- function(data, time.field = 'date', target.field = 'value', dummy.field = NULL
                             ,logged = TRUE, differencing = TRUE
