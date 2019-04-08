@@ -19,6 +19,9 @@
 #' @param smooth.var.sum If TRUE, the smoothing values for times when multiple promotions in a single tag overlap will be the values from the latest promotion. Otherwise, the values will be added(default).
 #' @param logged TRUE to take logs to the target variable and the trend/period component
 #' @param differencing TRUE to first difference the target variable, smoothed regressors, and the trend/period component values
+#' @param synergy.promotion TRUE to incorporate synergy between promotion tags.
+#' @param synergy.var Specify the synergy variables. 'names of fields' between each promotion tag and other variables. eg) c('month_start') to incorparate synergy between each promotion tag and 'month_start'.
+#' @param allow.missing TRUE to allow missing data in promotion sales during the promotion period
 #' @import dplyr
 #' @import Rcpp
 #' @import prophet
@@ -42,12 +45,12 @@ promotionImpact <- function(data, promotion
                             ,trend.param = 0.05, period.param = 3
                             ,var.type = 'smooth', smooth.except.date = NULL
                             ,smooth.bandwidth = 2, smooth.origin = 'all', smooth.var.sum = TRUE
-                            ,logged = TRUE, differencing = TRUE) {
-
-
+                            ,logged = TRUE, differencing = TRUE, synergy.promotion = FALSE, synergy.var = NULL, allow.missing = TRUE) {
+  
+  
   data <- as.data.frame(data)
   promotion <- as.data.frame(promotion)
-
+  
   ## 입력한 필드가 데이터에 포함되었는지 체크
   check.fields <- function(data, field) {
     if (!all(field %in% names(data))) {
@@ -55,34 +58,34 @@ promotionImpact <- function(data, promotion
                    paste(field, collapse=","), paste(names(data), collapse=", ")))
     }
   }
-
+  
   check.fields(data, time.field)
   check.fields(data, target.field)
   check.fields(data, dummy.field)
-
+  
   ## 일자 및 타겟 지표 컬럼명 지정
   names(data)[1:2] <- c('date','value')
-
+  
   ## 시간변수 변환 및 정렬
   data[,'date'] <- format_time(data[,'date'])
   data <- data[order(data[,'date']), ]
-
+  
   if (var.type == 'smooth') {
-
+    
     if (ncol(promotion) == 4) {
-
+      
       ## 프로모션 일정 데이터의 컬럼명 지정
       names(promotion) <- c('pro_id','start_date','end_date','pro_tag')
-
+      
       ## 프로모션 일정 데이터의 시간 변수 변환
       promotion['start_date'] <- format_time(unclass(promotion['start_date'])[[1]])
       promotion['end_date'] <- format_time(unclass(promotion['end_date'])[[1]])
-
+      
       ## 프로모션별 일별 한 row씩 나오도록 변환
       promotion$duration <- promotion$end_date - promotion$start_date + 1
       promotion <- promotion[rep(seq(nrow(promotion)), promotion$duration),]
       promotion$date <- promotion$start_date
-
+      
       ## dayPassed : 프로모션 기간 중 며칠째인지 나타냄
       for (i in seq(1:nrow(promotion))) {
         if (i == 1) {
@@ -93,17 +96,17 @@ promotionImpact <- function(data, promotion
           promotion[i,'dayPassed'] <- promotion[i-1,'dayPassed'] + 1
         }
       }
-
+      
       ## 프로모션별 일별 데이터로 구성
       promotion$date <- promotion$start_date + ((promotion$dayPassed - 1) * 86400)
       promotion <- promotion %>% dplyr::select(-duration, -dayPassed)
-
-
+      
+      
       # 통제변수만 넣고 모형 적합
       if (is.null(dummy.field) == TRUE & trend == FALSE & is.null(period) == TRUE & structural.change == FALSE) {
-
+        
         residuals <- data$value   # 통제변수가 없다면 타겟 지표 자체가 프로모션의 일별 효과
-
+        
       } else {
         invisible(
           capture.output(
@@ -114,122 +117,163 @@ promotionImpact <- function(data, promotion
             )
           )
         )
-
+        
         residuals <- control$model$residuals   # 통제변수가 있다면 통제변수만 넣은 모형의 잔차가 프로모션의 일별 효과
-
+        
       }
-
+      
       # residual : 일별 잔차 데이터. 이들 잔차를 프로모션의 일별 효과로 간주.
       residual <- data.frame(date = data[,'date'])
       residual[,'residual'] <- residuals
-
+      
       # residual 값을 기존 promotion에 join
       promotion <- promotion %>% dplyr::left_join(residual, by = c('date'='date'))
-
+      
       promotion <- promotion %>% dplyr::filter(start_date >= min(data$date) & end_date <= max(data$date))
-
+      
       # promotion의 잔차를 min-max scale
       promotion$residual <- (promotion$residual - min(promotion$residual)) / (max(promotion$residual) - min(promotion$residual))
-
+      
       # 겹치는 날짜의 잔차를 균등 배분
       promotion <- promotion %>% dplyr::add_count(date)
       promotion <- promotion %>% dplyr::mutate(residual = residual/n)
       promotion <- promotion %>% dplyr::select(-n)
-
+      
       # smoothed variables 생성
       smoothvar <- create.smooth.vars(target.data = data[ ,c('date', 'value')], promotion.data = promotion,
                                       smooth.except.date = smooth.except.date, smooth.bandwidth = smooth.bandwidth,
                                       smooth.origin = smooth.origin, smooth.var.sum = smooth.var.sum, smooth.scale = 'minmax')
-
+      
     } else if (ncol(promotion) == 6) {
-
+      
       names(promotion) <- c('pro_id','start_date','end_date','pro_tag','date','value')
-
+      
+      # 프로모션 기간 중 판매내역이 없는 날짜가 있는지 Check
+      pro_list <- unique(promotion$pro_id)
+      max_dt <- as.Date(max(data$date))
+      min_dt <- as.Date(min(data$date))
+      
+      for(pid in pro_list){
+        start_dt <- promotion[promotion$pro_id == pid,'start_date'][1]
+        end_dt <- promotion[promotion$pro_id == pid,'end_date'][1]
+        if( sum(!seq.Date(max(min_dt,start_dt),min(max_dt,end_dt),1) %in% promotion[promotion$pro_id == pid,'date']) > 0 ){
+          if(allow.missing == TRUE){
+            warning(sprintf("There is a date without sales data during the promotion period : promotion = '%s'", pid))
+          }else{
+            stop(sprintf("There is a date without sales data during the promotion period : promotion = '%s'
+                         If you want to ignore missing data, change the option : allow.missing=TRUE", pid))
+          }
+          
+          }
+      }
+      
       # smoothed variables 생성
       smoothvar <- create.smooth.vars(target.data = data[ ,c('date', 'value')], promotion.data = promotion,
                                       smooth.except.date = smooth.except.date, smooth.bandwidth = smooth.bandwidth,
                                       smooth.origin = smooth.origin, smooth.var.sum = smooth.var.sum, smooth.scale = 'max')
-
-    }
-
+      
+      }
+    
     # 최종 입력 데이터
     input.data <- data %>% dplyr::left_join(smoothvar$data, by = c('date'='date', 'value'='value'))
-
+    bmname <- unique(promotion$pro_tag)
+    
+    if( synergy.promotion == TRUE ){
+      #프로모션간 시너지 효과 고려
+      synergy <- combn(colnames(input.data[,colnames(input.data) %in% bmname]),2)
+      for(cb in 1:ncol(synergy)){
+        input.data <- cbind(input.data, apply(input.data[,colnames(input.data) %in% (synergy[,cb])],1,prod))
+      }
+      colnames(input.data)[(ncol(input.data)-ncol(synergy)+1):ncol(input.data)] <- apply(synergy,2,paste,collapse="and")
+    }
+    
+    if( sum(synergy.var %in% names(input.data)[-c(grep('date', names(input.data)), grep('value', names(input.data)))]) > 0 ){
+      #프로모션과 월초 등 기타변수의 시너지 효과 고려
+      synergy <- NULL  
+      for(b in colnames(input.data)[colnames(input.data) %in% bmname]){
+        for(d in synergy.var[synergy.var %in% names(input.data)[-c(grep('date', names(input.data)), grep('value', names(input.data)))]]){
+          input.data <- cbind(input.data, input.data[,b]*input.data[,d])
+          synergy <- append(synergy,paste(b, d, sep='and'))
+        }
+      }
+      colnames(input.data)[(ncol(input.data)-sum(colnames(input.data) %in% bmname)*length(synergy.var[synergy.var %in% names(input.data)[-c(grep('date', names(input.data)), grep('value', names(input.data)))]])+1):ncol(input.data)] <- synergy
+    }
+    
     # 모델링
     model <- promotion.model(input.data, time.field = 'date', target.field = 'value', dummy.field = dummy.field,
                              trend = trend, period = period, structural.change = structural.change,
                              trend.param = trend.param, period.param = period.param, logged=logged, differencing=differencing)
-
-
+    
+    
     # 회귀계수로부터 효과 환산
-
+    
     effects <- data.frame(matrix(nrow = 0, ncol = length(unique(promotion$pro_tag))))
     names(effects) <- unique(promotion$pro_tag)
-
+    
     if (logged == F) {
-
+      
       for (i in unique(promotion$pro_tag)) {
         effects[1, i] <- model$model$coefficients[i][[1]] * smoothvar$smooth_value_mean[[i]]  # 로그변환 없을 시 절대 효과 출력
       }
-
+      
     } else if (logged == T) {
-
+      
       for (i in unique(promotion$pro_tag)) {
         effects[1, i] <- ( exp(model$model$coefficients[i][[1]] * smoothvar$smooth_value_mean[[i]]) - 1 ) * 100  # 로그변환 했을 시 상대 효과(증가율) 출력
       }
-
+      
     }
-
-  } else if (var.type == 'dummy') {
-
-    ## 프로모션 일정 데이터의 컬럼명 지정
-    names(promotion) <- c('pro_id','start_date','end_date','pro_tag')
-
-    # 더미변수 생성
-    dummyvar <- create.dummy.vars(data[ c('date','value')], promotion, tovar.col = 'pro_tag')
-
-    # 최종 입력 데이터
-    input.data <- dummyvar %>% dplyr::left_join(data, by = c('date'='date', 'value'='value'))
-
-    # 모델링
-    model <- promotion.model(input.data, time.field = 'date', target.field = 'value', dummy.field = dummy.field,
-                             trend = trend, period = period, structural.change = structural.change,
-                             trend.param = trend.param, period.param = period.param, logged=logged, differencing=differencing)
-
-    if (differencing == T) {
-      warning("Differencing with dummy promotion variables is not recommended. The interpretation of the effects will be significantly different.")
-    }
-
-    # 회귀계수로부터 효과 환산
-    effects <- data.frame(matrix(nrow = 0, ncol = length(unique(promotion$pro_tag))))
-    names(effects) <- unique(promotion$pro_tag)
-
-    if (logged == F) {
-
-      for (i in unique(promotion$pro_tag)) {
-        effects[1, i] <- model$model$coefficients[i][[1]]  # 절대 효과
+    
+    } else if (var.type == 'dummy') {
+      
+      ## 프로모션 일정 데이터의 컬럼명 지정
+      names(promotion) <- c('pro_id','start_date','end_date','pro_tag')
+      
+      # 더미변수 생성
+      dummyvar <- create.dummy.vars(data[ c('date','value')], promotion, tovar.col = 'pro_tag')
+      
+      # 최종 입력 데이터
+      input.data <- dummyvar %>% dplyr::left_join(data, by = c('date'='date', 'value'='value'))
+      
+      # 모델링
+      model <- promotion.model(input.data, time.field = 'date', target.field = 'value', dummy.field = dummy.field,
+                               trend = trend, period = period, structural.change = structural.change,
+                               trend.param = trend.param, period.param = period.param, logged=logged, differencing=differencing)
+      
+      if (differencing == T) {
+        warning("Differencing with dummy promotion variables is not recommended. The interpretation of the effects will be significantly different.")
       }
-
-    } else if (logged == T) {
-
-      for (i in unique(promotion$pro_tag)) {
-        effects[1, i] <- ( exp(model$model$coefficients[i][[1]]) - 1 ) * 100  # 상대 효과(증가율)
+      
+      # 회귀계수로부터 효과 환산
+      effects <- data.frame(matrix(nrow = 0, ncol = length(unique(promotion$pro_tag))))
+      names(effects) <- unique(promotion$pro_tag)
+      
+      if (logged == F) {
+        
+        for (i in unique(promotion$pro_tag)) {
+          effects[1, i] <- model$model$coefficients[i][[1]]  # 절대 효과
+        }
+        
+      } else if (logged == T) {
+        
+        for (i in unique(promotion$pro_tag)) {
+          effects[1, i] <- ( exp(model$model$coefficients[i][[1]]) - 1 ) * 100  # 상대 효과(증가율)
+        }
       }
+      
     }
-
-  }
-
+  
   result <- list(
     model = model,
     effects = effects
   )
-
+  
   if (var.type == 'smooth') {
     result$smoothvar <- smoothvar
   }
-
+  
   return(result)
-
+  
 }
 
 
@@ -845,6 +889,50 @@ format_time <- function(data) {
   return(data)
 }
 
+#' detectOutliers
+#'
+#' detectOutliers extracts outliers which affect the average effects of promotions.
+#'
+#' @param model Execution result object : promotionImpact
+#' @param threshold List of threshold values to be determined as outliers if greater than the written values
+#' @param option The number of indicators that must be greater than the threshold values to be outliers.
+
+detectOutliers<-function(model, threshold=list(cooks.distance=1, dfbetas=1, dffits=2), option=2){
+  
+  ckdist<-cooks.distance(model$model$model)
+  betas<-as.data.frame(dfbetas(model$model$model))
+  fits<-dffits(model$model$model)
+  outlier1 <- model$model$final_input_data[which(ckdist>threshold[['cooks.distance']]),'date']
+  outlier2 <- model$model$final_input_data[rowSums(abs(betas)>threshold[['dfbetas']])>0,'date']
+  outlier3 <- model$model$final_input_data[which(fits>threshold[['dffits']]),'date']
+  
+  if(option==1){
+    #적어도 하나 이상 outlier로 판명될 때
+    outliers <- union(union(outlier1, outlier2), outlier3)
+    
+  }else if(option==2){
+    #적어도 두개 이상 outlier로 판명될 때
+    outliers <- union(intersect(outlier1, union(outlier2, outlier3)), intersect(outlier2, outlier3))
+    
+  }else if(option==3){
+    #세개 모두 outlier로 판명될 때
+    outliers <- intersect(intersect(outlier1, outlier2), outlier3)
+    
+  }
+  
+  if(as.Date(model$model$final_input_data$date %>% tail(1)) %in% as.Date(as.POSIXct(outliers, origin='1970-01-01'))){
+    #outlier날짜에 오늘이 있으면, 오늘을 제외한 outlier만 제거
+    outliers <- as.POSIXct(outliers, origin='1970-01-01')[! as.Date(model$model$final_input_data$date %>% 
+                                                                      tail(1)) %in% as.Date(as.POSIXct(outliers, origin='1970-01-01'))]
+  }
+  
+  index <- which(model$model$final_input_data$date %in% outliers)
+  outlier_dat <- model$model$final_input_data[model$model$final_input_data$date %in% outliers, c('date','value')]
+  outlier_dat <- cbind(outlier_dat, ckdist=ckdist[index], dfbetas=betas[index,], dffits=fits[index])
+  
+  return(list(outliers=outlier_dat, cooks.distance = ckdist, dfbetas = betas, dffits = fits))
+  
+}
 
 
 

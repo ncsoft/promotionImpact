@@ -70,19 +70,23 @@ pri1 <- promotionImpact(data=sim.data, promotion=sim.promotion,
                         time.field = 'dt', target.field = 'simulated_sales', 
                         dummy.field = 'month_start',
                         trend = T, period = 30.5, trend.param = 0.02, period.param = 2,
-                        logged = T, differencing = T)
+                        logged = TRUE, differencing = TRUE, synergy.promotion = FALSE,
+                        synergy.var = NULL, allow.missing = TRUE)
 ```
 
 위에서 쓰인 각 파라미터들에 대한 설명은 아래와 같습니다.
 
 - data : 일자(time.field), 타겟지표(target.field) 및 기타 dummy변수(dummy.field)를 포함한 데이터
 - promotion : 프로모션 일정 데이터
-- trend : T이면 트렌드 있음 / F이면 트렌드 없음
-- period : NULL 이면 주기성 없음, 'auto'이면 주기를 자동 추정, 특정 숫자값을 지정하면 입력한 주기로 추정
-- trend.param : 트렌드 컴포넌트의 유연함을 조정하는 파라미터. 이 값이 높을수록 동적으로 변하는 트렌드.
-- period.param : 주기성 컴포넌트의 유연함을 조정하는 파라미터. 이 값이 높을수록 동적으로 변하는 주기성.
-- logged = T : 타겟 지표 및 연속형 독립변수에 대한 로그 변환 여부
-- differencing = T : 타겟 지표 및 연속형 독립변수에 대한 차분 변환 여부
+- trend : TRUE면 트렌드 있음, FALSE면 트렌드 없음
+- period : NULL이면 주기성 없음, 'auto'이면 주기를 자동 추정, 특정 숫자값을 지정하면 입력한 주기로 추정
+- trend.param : 트렌드 컴포넌트의 유연함을 조정하는 파라미터. 이 값이 높을수록 동적으로 변하는 트렌드
+- period.param : 주기성 컴포넌트의 유연함을 조정하는 파라미터. 이 값이 높을수록 동적으로 변하는 주기성
+- logged : 타겟 지표 및 연속형 독립변수에 대한 로그 변환 여부
+- differencing : 타겟 지표 및 연속형 독립변수에 대한 차분 변환 여부
+- synergy.promotion : 프로모션 유형간 시너지 효과 고려 여부
+- synergy.var : 프로모션 유형과의 시너지 효과를 고려할 변수 목록. c('month_start')를 삽입할 경우, 각 프로모션 유형과 'month_start'변수의 시너지 효과가 고려됨
+- allow.missing : TRUE면 프로모션 기간 중 프로모션 매출이 없는 날짜가 있더라도 경고 메시지만 출력 후 함수 실행, FALSE면 에러 메시지 출력 후 실행 중단
 
 이를 통해 얻어진 각 프로모션 유형 별 효과는 아래에서 확인할 수 있습니다.
 
@@ -233,3 +237,66 @@ pri3$effects
 </p>
 
 특히, 타겟 시계열(일별 매출, AU 등)로부터 트렌드/주기성/구조변화 컴포넌트를 추정하여 이를 통제한 상태에서, 프로모션 효과의 시간에 따른 변화 양상을 고려한(smoothing) 변수처리를 통해 프로모션 효과를 분리/측정하는 것이 핵심 기능이라고 할 수 있습니다.
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# detectOutliers
+
+decectOutliers는 전체적인 다른 데이터에 비해 값이 너무 크거나 작아 프로모션 효과 분석에 방해가 되는 관측치를 잡아내기 위한 함수입니다.
+
+promotionImpact 함수의 실행 결과로부터 생성된 객체를 입력값으로 받아 해당 모형에 사용된 관측치 중 이상치로 생각되는 날짜를 반환해 줍니다.
+
+관측치를 이상치로 판별하는 기준은 기본값으로 입력이 되어 있으나, 사용자가 원하는대로 지정 또한 가능합니다.
+
+## 사용 방법
+먼저, promotionImpact 함수를 실행하여 결과가 저장된 객체가 필요하므로 아래와 같이 첫 모델을 생성합니다.
+
+```
+pri1 <- promotionImpact(data = sim.data, promotion = sim.promotion.sales, 
+                        time.field = 'dt', target.field = 'simulated_sales')
+```
+
+그 다음, 다른 관측치에 비해 값이 너무 크거나 작아 평균적인 프로모션 효과 측정에 방해가 되는 관측치를 잡아내기 위하여 detectOutliers 함수를 사용합니다.
+
+```
+out1 <- detectOutliers(model = pri1, threshold = list(cooks.distance=1, dfbetas=1, dffits=2), option = 1)
+```
+
+위에서 쓰인 각 파라미터들에 대한 설명은 아래와 같습니다.
+
+- model : 사용자가 분석하려는 데이터로 promotionImpact 함수를 실행하여 결과가 저장된 객체
+- threshold : outlier를 판별하는 각 지표들의 판별 기준값. dfbetas나 dffits의 경우, 절대값으로 적용
+- option : outlier 판별 지표들 중 최종 outlier라 판단되기 위하여 공통적으로 넘어야 할 기준값의 개수. 1,2,3의 값을 가질 수 있으며 예를 들어 option = 2인 경우, 3개 중 적어도 2개 이상의 지표에 대하여 기준값을 넘은 관측치만 최종 outlier라 출력
+
+이를 통해 얻어진 이상치는 아래와 같이 확인할 수 있습니다.
+
+```
+out1$outliers
+          date      value   ckdist dfbetas.(Intercept)    dfbetas.A   dfbetas.B
+781 2017-04-02 -0.2822406 0.164772          -0.1117467 -0.005641418 0.004097004
+      dfbetas.C    dfbetas.D dfbetas.E dfbetas.trend_period_value    dffits
+781 -0.01066382 -0.005173209  -1.07215                -0.05684834 -1.079674
+```
+
+위 결과를 보면 2017년 4월 2일이 E에 해당하는 계수 값에 대하여 dfbetas의 절대값이 기준값인 1을 초과하여 outlier로 판명되었음을 알 수 있습니다.
+
+이제, 이상치를 제거한 다음 다시 promotionImpact 함수를 실행하여 봅시다.
+
+```
+library(dplyr)
+sim.data.new <- sim.data %>% filter(dt != '2017-04-02')
+sim.promotion.sales.new <- sim.promotion.sales %>% filter(dt != '2017-04-02')
+pri2 <- promotionImpact(data = sim.data.new, promotion = sim.promotion.sales.new, 
+                        time.field = 'dt', target.field = 'simulated_sales')
+pri1$effects
+         A       B        C       D        E
+1 22.34649 16.8745 11.57992 8.82892 3.970266
+pri2$effects
+         A        B        C        D        E
+1 22.40018 16.93162 11.61099 8.854282 4.436345
+```
+
+이상치를 제거하기 이전에 비하여 프로모션 효과 값의 변동을 관찰할 수 있습니다. 
+
+특히, 다른 유형의 프로모션의 경우 값의 변화가 작지만 직접적인 이상치의 원인이었던 유형 E 의 경우 값이 크게 변동한 것을 볼 수 있습니다.
+

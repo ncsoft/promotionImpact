@@ -9,7 +9,8 @@ promotionImpact(data, promotion, time.field = "date",
   period = "auto", structural.change = FALSE, trend.param = 0.05,
   period.param = 3, var.type = "smooth", smooth.except.date = NULL,
   smooth.bandwidth = 2, smooth.origin = "all", smooth.var.sum = TRUE,
-  logged = TRUE, differencing = TRUE)
+  logged = TRUE, differencing = TRUE, synergy.promotion = FALSE,
+  synergy.var = NULL, allow.missing = TRUE)
 }
 \arguments{
 \item{data}{Dataframe containing date, target variable, and some additional time dummies that the researcher wants to account for.}
@@ -45,6 +46,12 @@ promotionImpact(data, promotion, time.field = "date",
 \item{logged}{TRUE to take logs to the target variable and the trend/period component}
 
 \item{differencing}{TRUE to first difference the target variable, smoothed regressors, and the trend/period component values}
+
+\item{synergy.promotion}{TRUE to incorporate synergy between promotion tags.}
+
+\item{synergy.var}{Specify the synergy variables. 'names of fields' between each promotion tag and other variables. eg) c('month_start') to incorparate synergy between each promotion tag and 'month_start'.}
+
+\item{allow.missing}{TRUE to allow missing data in promotion sales during the promotion period}
 }
 \description{
 promotionImpact is for analysis & measurement of the effectiveness of promotions, controlling for some prespeficied or estimated control variables.
