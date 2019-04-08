@@ -896,6 +896,7 @@ format_time <- function(data) {
 #' @param model Execution result object : promotionImpact
 #' @param threshold List of threshold values to be determined as outliers if greater than the written values
 #' @param option The number of indicators that must be greater than the threshold values to be outliers.
+#' @export detectOutliers
 
 detectOutliers<-function(model, threshold=list(cooks.distance=1, dfbetas=1, dffits=2), option=2){
   
@@ -904,7 +905,7 @@ detectOutliers<-function(model, threshold=list(cooks.distance=1, dfbetas=1, dffi
   fits<-dffits(model$model$model)
   outlier1 <- model$model$final_input_data[which(ckdist>threshold[['cooks.distance']]),'date']
   outlier2 <- model$model$final_input_data[rowSums(abs(betas)>threshold[['dfbetas']])>0,'date']
-  outlier3 <- model$model$final_input_data[which(fits>threshold[['dffits']]),'date']
+  outlier3 <- model$model$final_input_data[which(abs(fits)>threshold[['dffits']]),'date']
   
   if(option==1){
     #적어도 하나 이상 outlier로 판명될 때
