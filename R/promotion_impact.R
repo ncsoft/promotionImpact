@@ -896,6 +896,7 @@ format_time <- function(data) {
 #' @param model Execution result object : promotionImpact
 #' @param threshold List of threshold values to be determined as outliers if greater than the written values
 #' @param option The number of indicators that must be greater than the threshold values to be outliers.
+#' @export detectOutliers
 
 detectOutliers<-function(model, threshold=list(cooks.distance=1, dfbetas=1, dffits=2), option=2){
   
