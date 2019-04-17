@@ -952,7 +952,7 @@ detectOutliers<-function(model, threshold=list(cooks.distance=1, dfbetas=1, dffi
 #' @param smooth.bandwidth Bandwidth of local polynomial regression used in the smoothing process. Default value is 2.
 #' @param smooth.var.sum If TRUE, the smoothing values for times when multiple promotions in a single tag overlap will be the values from the latest promotion. Otherwise, the values will be added(default).
 #' @param allow.missing TRUE to allow missing data in promotion sales during the promotion period
-#' @importFrom lmtest bptest dwtest
+#' @importFrom lmtest dwtest bptest
 #' @importFrom crayon italic bold green
 #' @export compareModels
 
