@@ -252,14 +252,14 @@ promotionImpact 함수의 실행 결과로부터 생성된 객체를 입력값�
 먼저, promotionImpact 함수를 실행하여 결과가 저장된 객체가 필요하므로 아래와 같이 첫 모델을 생성합니다.
 
 ```
-pri1 <- promotionImpact(data = sim.data, promotion = sim.promotion.sales, 
+pri4 <- promotionImpact(data = sim.data, promotion = sim.promotion.sales, 
                         time.field = 'dt', target.field = 'simulated_sales')
 ```
 
 그 다음, 다른 관측치에 비해 값이 너무 크거나 작아 평균적인 프로모션 효과 측정에 방해가 되는 관측치를 잡아내기 위하여 detectOutliers 함수를 사용합니다.
 
 ```
-out1 <- detectOutliers(model = pri1, threshold = list(cooks.distance=1, dfbetas=1, dffits=2), option = 1)
+out <- detectOutliers(model = pri4, threshold = list(cooks.distance=1, dfbetas=1, dffits=2), option = 1)
 ```
 
 위에서 쓰인 각 파라미터들에 대한 설명은 아래와 같습니다.
@@ -271,7 +271,7 @@ out1 <- detectOutliers(model = pri1, threshold = list(cooks.distance=1, dfbetas=
 이를 통해 얻어진 이상치는 아래와 같이 확인할 수 있습니다.
 
 ```
-out1$outliers
+out$outliers
           date      value   ckdist dfbetas.(Intercept)    dfbetas.A   dfbetas.B
 781 2017-04-02 -0.2822406 0.164772          -0.1117467 -0.005641418 0.004097004
       dfbetas.C    dfbetas.D dfbetas.E dfbetas.trend_period_value    dffits
@@ -286,12 +286,12 @@ out1$outliers
 library(dplyr)
 sim.data.new <- sim.data %>% filter(dt != '2017-04-02')
 sim.promotion.sales.new <- sim.promotion.sales %>% filter(dt != '2017-04-02')
-pri2 <- promotionImpact(data = sim.data.new, promotion = sim.promotion.sales.new, 
+pri5 <- promotionImpact(data = sim.data.new, promotion = sim.promotion.sales.new, 
                         time.field = 'dt', target.field = 'simulated_sales')
-pri1$effects
+pri4$effects
          A       B        C       D        E
 1 22.34649 16.8745 11.57992 8.82892 3.970266
-pri2$effects
+pri5$effects
          A        B        C        D        E
 1 22.40018 16.93162 11.61099 8.854282 4.436345
 ```
@@ -299,4 +299,87 @@ pri2$effects
 이상치를 제거하기 이전에 비하여 프로모션 효과 값의 변동을 관찰할 수 있습니다. 
 
 특히, 다른 유형의 프로모션의 경우 값의 변화가 작지만 직접적인 이상치의 원인이었던 유형 E 의 경우 값이 크게 변동한 것을 볼 수 있습니다.
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# compareModels
+
+compareModels는 promotionImpact 함수의 많은 옵션들을 사용자의 데이터에 보다 알맞게 지정하는 데에 도움을 주고자 만들어진 함수입니다.
+
+promotionImpact 함수의 입력 데이터를 넣고, 필요한 경우 꼭 고정시켜야 하는 옵션을 사용자가 지정해주면 해당 제약조건 하에서 적절한 옵션을 찾아줍니다.
+
+## 사용 방법
+프로모션 효과 측정을 위하여 사용하고자 하는 데이터를 넣고, 날짜, 타겟, 더미 field 이름을 정해줍니다.
+
+필요한 제약 조건이 있는 경우, fix 옵션으로 지정하여 고정시킬 수 있습니다.
+
+```
+library(dplyr)
+sim.data <- sim.data %>% mutate(month_start = ifelse(substr(as.character(dt),9,10) == '01', 1, 0))
+comparison <- compareModels(data = sim.data, promotion = sim.promotion.sales,
+                            fix = list(logged = T, differencing = T, smooth.origin='tag'), 
+                            time.field = 'dt', target.field = 'simulated_sales', 
+                            dummy.field = 'month_start',
+                            trend.param = 0.02, period.param = 2)
+Analysis report
+To satisfy the assumption of residuals, we recommand logged=TRUE, differencing=TRUE transformation on the response variable.
+And the most appropriate options for independent variables are smooth.origin=tag, synergy.promotion=FALSE, trend=FALSE, period=auto, structural.change=FALSE under logged=TRUE, differencing=TRUE, smooth.origin=tag condition.
+But this may be local optimum not global optimum.
+```
+위와 같이 사용자가 지정한 조건 하에서 AIC를 최소로 하는 옵션들을 제안해줍니다.
+
+로그 및 차분 변환에 관한 판단은 주로 잔차 분석을 통해 의사결정을 내리므로, 각각의 경우의 수에 대하여 promotionImpact 객체를 비롯한 사용자가 직접 판단할 수 있도록 다양한 plot이 저장되어 있습니다. 
+
+예를 들어, 아래의 그림들은 차분을 통해 잔차의 주기성을 제거할 수 있다는 것을 보여줍니다.
+
+```
+library(gridExtra)
+do.call(grid.arrange, comparison$residualPlot)
+```
+<p align="center">
+<img width="500" height="280" src="https://github.com/ncsoft/promotionImpact/blob/master/resources/residual_plot.png?raw=true" />
+</p>
+
+```
+do.call(grid.arrange, comparison$acfPlot)
+```
+<p align="center">
+<img width="500" height="280" src="https://github.com/ncsoft/promotionImpact/blob/master/resources/acf_plot.png?raw=true" />
+</p>
+
+모형의 계수에 대한 검정을 위해서는 정규분포 가정이 필요합니다. 아래의 그림들은 이에 대한 판단에 도움을 줄 수 있을 것입니다.
+
+```
+do.call(grid.arrange, comparison$qqPlot)
+```
+<p align="center">
+<img width="500" height="280" src="https://github.com/ncsoft/promotionImpact/blob/master/resources/normal_qqplot.png?raw=true" />
+</p>
+```
+do.call(grid.arrange, comparison$histPlot)
+```
+<p align="center">
+<img width="500" height="280" src="https://github.com/ncsoft/promotionImpact/blob/master/resources/hist_plot.png?raw=true" />
+</p>
+
+
+로그 및 차분 변환 이외에 다른 옵션들을 바꿔가며 여러 모형을 적합한 결과를 아래와 같이 간단히 표로도 살펴볼 수 있습니다. 이때, 다양한 옵션들의 조합을 고려하여 최대 10개의 모형을 비교합니다.
+
+```
+comparison$params
+   differencing logged smooth.origin synergy.promotion trend period structural.change       AIC      RMSE        MAE  p        
+1          TRUE   TRUE           tag             FALSE  TRUE   NULL             FALSE -1488.699 0.1101252 0.08259737  8        
+2          TRUE   TRUE           tag              TRUE FALSE   auto             FALSE -1492.414 0.1087691 0.08221139 18        
+3          TRUE   TRUE           tag             FALSE FALSE   auto             FALSE -1493.125 0.1098708 0.08260071  8 *final*
+4          TRUE   TRUE           tag             FALSE FALSE   NULL             FALSE -1490.699 0.1101252 0.08259681  7        
+5          TRUE   TRUE           tag              TRUE FALSE   NULL              TRUE -1483.025 0.1089619 0.08221421 21        
+6          TRUE   TRUE           tag              TRUE  TRUE   auto              TRUE -1485.006 0.1087355 0.08218397 22        
+7          TRUE   TRUE           tag             FALSE FALSE   auto              TRUE -1485.148 0.1098695 0.08261233 12        
+8          TRUE   TRUE           tag              TRUE FALSE   NULL             FALSE -1491.008 0.1089629 0.08219880 17        
+9          TRUE   TRUE           tag             FALSE  TRUE   NULL              TRUE -1480.721 0.1101239 0.08260761 12        
+10         TRUE   TRUE           tag              TRUE  TRUE   NULL             FALSE -1489.008 0.1089628 0.08219762 18 
+```
+
+또, 각 모형에 대한 promotionImpact 객체는 리스트의 형태로 models에 저장되며, 표의 가장 오른쪽에 표시된 AIC를 최소로 하는 최종 모형은 final_model에서 바로 볼 수 있습니다.
+
 
