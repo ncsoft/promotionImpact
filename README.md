@@ -355,6 +355,7 @@ do.call(grid.arrange, comparison$qqPlot)
 <p align="center">
 <img width="500" height="280" src="https://github.com/ncsoft/promotionImpact/blob/master/resources/normal_qqplot.png?raw=true" />
 </p>
+
 ```
 do.call(grid.arrange, comparison$histPlot)
 ```
