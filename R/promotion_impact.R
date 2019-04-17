@@ -952,8 +952,8 @@ detectOutliers<-function(model, threshold=list(cooks.distance=1, dfbetas=1, dffi
 #' @param smooth.bandwidth Bandwidth of local polynomial regression used in the smoothing process. Default value is 2.
 #' @param smooth.var.sum If TRUE, the smoothing values for times when multiple promotions in a single tag overlap will be the values from the latest promotion. Otherwise, the values will be added(default).
 #' @param allow.missing TRUE to allow missing data in promotion sales during the promotion period
-#' @import lmtest
-#' @import crayon
+#' @importFrom lmtest bptest dwtest
+#' @importFrom crayon italic bold green
 #' @export compareModels
 
 
@@ -1139,18 +1139,18 @@ compareModels <- function(data, promotion, fix=list(logged = T, differencing = T
   }
   
   test_list <- list(
-    'log=T, diff=T'=list(heteroscedasticity = bptest(model_y[[1]]$model$model), 
+    'log=T, diff=T'=list(heteroscedasticity = lmtest::bptest(model_y[[1]]$model$model), 
                          normality = shapiro.test(model_y[[1]]$model$model$residuals), 
-                         autocorrelation = dwtest(model_y[[1]]$model$model, alternative = 'two.sided')),
-    'log=F, diff=T'=list(heteroscedasticity = bptest(model_y[[2]]$model$model), 
+                         autocorrelation = lmtest::dwtest(model_y[[1]]$model$model, alternative = 'two.sided')),
+    'log=F, diff=T'=list(heteroscedasticity = lmtest::bptest(model_y[[2]]$model$model), 
                          normality = shapiro.test(model_y[[2]]$model$model$residuals), 
-                         autocorrelation = dwtest(model_y[[2]]$model$model, alternative = 'two.sided')),
-    'log=T, diff=F'=list(heteroscedasticity = bptest(model_y[[3]]$model$model), 
+                         autocorrelation = lmtest::dwtest(model_y[[2]]$model$model, alternative = 'two.sided')),
+    'log=T, diff=F'=list(heteroscedasticity = lmtest::bptest(model_y[[3]]$model$model), 
                          normality = shapiro.test(model_y[[3]]$model$model$residuals), 
-                         autocorrelation = dwtest(model_y[[3]]$model$model, alternative = 'two.sided')),
-    'log=F, diff=F'=list(heteroscedasticity = bptest(model_y[[4]]$model$model), 
+                         autocorrelation = lmtest::dwtest(model_y[[3]]$model$model, alternative = 'two.sided')),
+    'log=F, diff=F'=list(heteroscedasticity = lmtest::bptest(model_y[[4]]$model$model), 
                          normality = shapiro.test(model_y[[4]]$model$model$residuals), 
-                         autocorrelation = dwtest(model_y[[4]]$model$model, alternative = 'two.sided'))
+                         autocorrelation = lmtest::dwtest(model_y[[4]]$model$model, alternative = 'two.sided'))
   )
   
   report <- paste(c('Analysis report: To satisfy the assumption of residuals, we recommand ',paste(paste(names(y_cond),y_cond,sep="="),collapse=', '),
@@ -1160,10 +1160,10 @@ compareModels <- function(data, promotion, fix=list(logged = T, differencing = T
   
   writeLines(c('Analysis report',
                sprintf('To satisfy the assumption of residuals, we recommand %s transformation on the response variable.',
-                       italic(green(bold(paste(paste(names(y_cond),y_cond,sep="="),collapse=', '))))), 
+                       crayon::italic(crayon::green(crayon::bold(paste(paste(names(y_cond),y_cond,sep="="),collapse=', '))))), 
                sprintf('And the most appropriate options for independent variables are %s under %s condition.',
-                       italic(green(bold(paste(paste(names(params)[3:7],params[which.min(params$AIC),3:7],sep="="),collapse = ", ")))),
-                       italic(green(bold(paste(paste(names(fix),fix,sep="="),collapse=', '))))
+                       crayon::italic(crayon::green(crayon::bold(paste(paste(names(params)[3:7],params[which.min(params$AIC),3:7],sep="="),collapse = ", ")))),
+                       crayon::italic(crayon::green(crayon::bold(paste(paste(names(fix),fix,sep="="),collapse=', '))))
                ),'But this may be local optimum not global optimum.'))
   
   fitted_data <- predict(model[[which.min(params$AIC)]]$model$model, interval = 'confidence')

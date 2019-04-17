@@ -9,5 +9,5 @@ License: BSD-3
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
-Depends: R (>= 3.4.3), Rcpp (>= 0.12.17), dplyr (>= 0.7.6), ggplot2 (>= 3.0.0), scales (>= 1.0.0), prophet (>= 0.3.0.1), lmtest (>=2.10.0), crayon (>=1.3.4)
-Imports: KernSmooth (>= 2.23.15), MASS (>= 7.3.49), data.table (>= 1.11.4), ggpubr (>= 0.1.8), reshape2 (>= 1.4.3), stringr (>= 1.3.1), strucchange (>= 1.5.1)
+Depends: R (>= 3.4.3), Rcpp (>= 0.12.17), dplyr (>= 0.7.6), ggplot2 (>= 3.0.0), scales (>= 1.0.0), prophet (>= 0.3.0.1)
+Imports: KernSmooth (>= 2.23.15), MASS (>= 7.3.49), data.table (>= 1.11.4), ggpubr (>= 0.1.8), reshape2 (>= 1.4.3), stringr (>= 1.3.1), strucchange (>= 1.5.1), lmtest (>=2.10.0), crayon (>=1.3.4)
