@@ -8,15 +8,13 @@ promotionImpact는 타겟 지표(일매출, DAU 등)에 대한 프로모션의 �
 R에서 아래 코드를 실행하시면 됩니다.
 
 ```
+library(devtools)
 devtools::install_github("ncsoft/promotionImpact")
 ```
 
-혹시 사용자의 R 환경에 아래와 같은 패키지가 설치되어 있는 경우, 
-해당 패키지들은 미리 제거하고 위 코드를 실행해야 정상적으로 설치 됩니다.
-- prophet
-- Rcpp
-- RcppEigen
-- rstan
+사용자의 R버전에 맞는 Rtools를 https://cran.r-project.org/bin/windows/Rtools/ 에서 함께 설치해 주셔야 정상적으로 설치가 됩니다.
+참고로 install_github명령어를 실행했을 때 다른 패키지들를 업데이트 할 것이냐고 묻는 경우가 있는데, 이때 None을 선택하셔도 promotionImpact는 정상적으로 설치됩니다.
+
 
 ## 사용 방법
 먼저, 아래의 데이터들이 필요합니다 (참고로 promotionImpact 에는 연습을 위한 샘플 데이터가 포함되어 있습니다).
