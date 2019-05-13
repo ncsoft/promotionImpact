@@ -1126,7 +1126,6 @@ compareModels <- function(data, promotion, fix=list(logged = TRUE, differencing 
 #' @description This data set is simulated daily total sales data contaning 958 observations of 2 variables.
 #' `dt`: date with Date format.
 #' `simulated_sales`: simulated daily sales with numeric format.
-#' @details 
 #' @usage sim.data
 #' @format A dataset containing 958 observations of 2 variables.
 #' @source NCsoft AnalysisModeling Team <gimmesilver@ncsoft.com> <windy0126@ncsoft.com> <nhkim1302@ncsoft.com>
