@@ -2,7 +2,7 @@
 % Please edit documentation in R/promotion_impact.R
 \name{promotionImpact}
 \alias{promotionImpact}
-\title{promotionImpact}
+\title{estimate effectiveness of promotions}
 \usage{
 promotionImpact(data, promotion, time.field = "date",
   target.field = "value", dummy.field = NULL, trend = TRUE,
@@ -54,5 +54,18 @@ promotionImpact(data, promotion, time.field = "date",
 \item{allow.missing}{TRUE to allow missing data in promotion sales during the promotion period}
 }
 \description{
+promotionImpact
+}
+\details{
 promotionImpact is for analysis & measurement of the effectiveness of promotions, controlling for some prespeficied or estimated control variables.
+}
+\examples{
+sim.data$month_start <- ifelse(substr(as.character(sim.data$dt),9,10) == '01', 1, 0)
+pri1 <- promotionImpact(data=sim.data, promotion=sim.promotion.sales, 
+                        time.field = 'dt', target.field = 'simulated_sales', 
+                        dummy.field = 'month_start',
+                        trend = TRUE, period = 30.5, trend.param = 0.02, period.param = 2,
+                        logged = TRUE, differencing = TRUE, synergy.promotion = FALSE,
+                        synergy.var = NULL, allow.missing = TRUE)
+pri1$effects
 }

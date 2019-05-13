@@ -2,13 +2,13 @@
 % Please edit documentation in R/promotion_impact.R
 \name{compareModels}
 \alias{compareModels}
-\title{compareModels}
+\title{compare several models}
 \usage{
-compareModels(data, promotion, fix = list(logged = T, differencing = T),
-  time.field = "dt", target.field = "sales", dummy.field = NULL,
-  trend.param = 0.05, period.param = 3, var.type = "smooth",
-  smooth.except.date = NULL, smooth.bandwidth = 2,
-  smooth.var.sum = TRUE, allow.missing = TRUE)
+compareModels(data, promotion, fix = list(logged = TRUE, differencing =
+  TRUE), time.field = "dt", target.field = "sales",
+  dummy.field = NULL, trend.param = 0.05, period.param = 3,
+  var.type = "smooth", smooth.except.date = NULL,
+  smooth.bandwidth = 2, smooth.var.sum = TRUE, allow.missing = TRUE)
 }
 \arguments{
 \item{data}{Dataframe containing date, target variable, and some additional time dummies that the researcher wants to account for.}
@@ -38,5 +38,15 @@ compareModels(data, promotion, fix = list(logged = T, differencing = T),
 \item{allow.missing}{TRUE to allow missing data in promotion sales during the promotion period}
 }
 \description{
+compareModels
+}
+\details{
 compareModels compares several models under user-defined conditions and suggests the best options.
+}
+\examples{
+sim.data$month_start <-ifelse(substr(as.character(sim.data$dt),9,10) == '01', 1, 0)
+comparison <- compareModels(data = sim.data, promotion = sim.promotion.sales,
+                            fix = list(logged = TRUE, differencing = TRUE, smooth.origin='tag'), 
+                            time.field = 'dt', target.field = 'simulated_sales', 
+                            dummy.field = 'month_start', trend.param = 0.02, period.param = 2)
 }
