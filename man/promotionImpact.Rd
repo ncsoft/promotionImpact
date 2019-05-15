@@ -67,5 +67,4 @@ pri1 <- promotionImpact(data=sim.data, promotion=sim.promotion.sales,
                         trend = TRUE, period = 30.5, trend.param = 0.02, period.param = 2,
                         logged = TRUE, differencing = TRUE, synergy.promotion = FALSE,
                         synergy.var = NULL, allow.missing = TRUE)
-pri1$effects
 }

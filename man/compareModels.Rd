@@ -43,10 +43,3 @@ compareModels
 \details{
 compareModels compares several models under user-defined conditions and suggests the best options.
 }
-\examples{
-sim.data$month_start <-ifelse(substr(as.character(sim.data$dt),9,10) == '01', 1, 0)
-comparison <- compareModels(data = sim.data, promotion = sim.promotion.sales,
-                            fix = list(logged = TRUE, differencing = TRUE, smooth.origin='tag'), 
-                            time.field = 'dt', target.field = 'simulated_sales', 
-                            dummy.field = 'month_start', trend.param = 0.02, period.param = 2)
-}

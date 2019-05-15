@@ -24,9 +24,9 @@
 #' @param allow.missing TRUE to allow missing data in promotion sales during the promotion period
 #' @import dplyr
 #' @import Rcpp
-#' @import prophet
 #' @import ggplot2
 #' @import scales
+#' @import prophet
 #' @importFrom ggpubr ggarrange
 #' @importFrom KernSmooth locpoly
 #' @importFrom stringr str_detect
@@ -42,7 +42,6 @@
 #'                         trend = TRUE, period = 30.5, trend.param = 0.02, period.param = 2,
 #'                         logged = TRUE, differencing = TRUE, synergy.promotion = FALSE,
 #'                         synergy.var = NULL, allow.missing = TRUE)
-#' pri1$effects
 #' @export promotionImpact
 
 
@@ -799,17 +798,13 @@ format_time <- function(data) {
 #' @param option The number of indicators that must be greater than the threshold values to be outliers.
 #' @importFrom stats AIC acf as.formula as.ts cooks.distance density dfbetas dffits dnorm lm predict sd shapiro.test
 #' @importFrom utils tail
-#' @examples pri1 <- promotionImpact(data = sim.data, promotion = sim.promotion.sales, 
-#'                                   time.field = 'dt', target.field = 'simulated_sales')
+#' @examples pri1 <- promotionImpact(data=sim.data, promotion=sim.promotion.sales, 
+#'                                   time.field = 'dt', target.field = 'simulated_sales', 
+#'                                   trend = FALSE, period = 30.5,
+#'                                   logged = TRUE, differencing = TRUE, synergy.promotion = FALSE,
+#'                                   synergy.var = NULL, allow.missing = TRUE)
 #' out <- detectOutliers(model = pri1, 
 #'                       threshold = list(cooks.distance=1, dfbetas=1, dffits=2), option = 1)
-#' out$outliers
-#' sim.data.new <- sim.data[sim.data$dt != '2017-04-02', ]
-#' sim.promotion.sales.new <- sim.promotion.sales[sim.promotion.sales$dt != '2017-04-02', ]
-#' pri2 <- promotionImpact(data = sim.data.new, promotion = sim.promotion.sales.new, 
-#'                         time.field = 'dt', target.field = 'simulated_sales')
-#' pri1$effects
-#' pri2$effects
 #' @export detectOutliers
 
 detectOutliers<-function(model, threshold=list(cooks.distance=1, dfbetas=1, dffits=2), option=2){
@@ -871,12 +866,6 @@ detectOutliers<-function(model, threshold=list(cooks.distance=1, dfbetas=1, dffi
 #' @importFrom crayon italic bold green
 #' @importFrom utils tail
 #' @importFrom stats AIC acf as.formula as.ts cooks.distance density dfbetas dffits dnorm lm predict sd shapiro.test
-#' @examples 
-#' sim.data$month_start <-ifelse(substr(as.character(sim.data$dt),9,10) == '01', 1, 0)
-#' comparison <- compareModels(data = sim.data, promotion = sim.promotion.sales,
-#'                             fix = list(logged = TRUE, differencing = TRUE, smooth.origin='tag'), 
-#'                             time.field = 'dt', target.field = 'simulated_sales', 
-#'                             dummy.field = 'month_start', trend.param = 0.02, period.param = 2)
 #' @export compareModels
 
 
