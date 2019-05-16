@@ -1,6 +1,10 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^\.git$
 
 .gitignore
 README.md
+README_KOR.md
 .Rhistory
+resources
+LICENSE.txt
