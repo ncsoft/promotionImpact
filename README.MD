@@ -200,7 +200,7 @@ pri3 <- promotionImpact(data=sim.data, promotion=sim.promotion,
 We also added a structural change element in the time series as well as trend/periodicity components in this example. If the structural.change option is set to TRUE, the model will detect the sudden change in the level of the daily target indicator and add it as a variable.
 
 ```
-pri3$structural_breakpoint
+pri3$model$structural_breakpoint
 "2015-09-16 UTC" "2016-02-23 UTC" "2016-11-22 UTC" "2017-04-20 UTC"
 ```
 

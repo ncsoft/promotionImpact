@@ -200,7 +200,7 @@ pri3 <- promotionImpact(data=sim.data, promotion=sim.promotion,
 또한 이번에는, 트렌드/주기성 컴포넌트에 더하여, 시계열의 '구조변화(structural change)' 요소를 도입하여 보았습니다. structural.change 옵션을 TRUE로 주게 되면, 일별 타겟 지표의 급격한 수준 변화 지점을 탐지하여 이를 변수로 추가해 줍니다.
 
 ```
-pri3$structural_breakpoint
+pri3$model$structural_breakpoint
 "2015-09-16 UTC" "2016-02-23 UTC" "2016-11-22 UTC" "2017-04-20 UTC"
 ```
 
