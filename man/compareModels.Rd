@@ -43,3 +43,21 @@ compareModels
 \details{
 compareModels compares several models under user-defined conditions and suggests the best options.
 }
+\examples{
+\dontshow{
+sim.data.sub <- sim.data \%>\% filter(dt <= '2015-05-01')
+sim.promotion.sub <- sim.promotion \%>\% filter(start_dt <= '2015-05-01')
+pri1 <- promotionImpact(data=sim.data.sub, promotion=sim.promotion.sub, 
+                       time.field = 'dt', target.field = 'simulated_sales', 
+                       trend = FALSE, period = NULL, structural.change = FALSE,
+                       logged = TRUE, differencing = TRUE, synergy.promotion = FALSE,
+                       synergy.var = NULL, allow.missing = TRUE)
+}
+\donttest{
+comparison <- compareModels(data = sim.data, promotion = sim.promotion.sales,
+                            fix = list(logged = T, differencing = T, smooth.origin='all',
+                                       trend = FALSE, period = NULL), 
+                            time.field = 'dt', target.field = 'simulated_sales', 
+                            trend.param = 0.02, period.param = 2)
+} 
+}

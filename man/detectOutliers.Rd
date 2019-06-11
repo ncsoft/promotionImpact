@@ -21,11 +21,22 @@ detectOutliers
 detectOutliers extracts outliers which affect the average effects of promotions.
 }
 \examples{
-pri1 <- promotionImpact(data=sim.data, promotion=sim.promotion.sales, 
-                                  time.field = 'dt', target.field = 'simulated_sales', 
-                                  trend = FALSE, period = 30.5,
-                                  logged = TRUE, differencing = TRUE, synergy.promotion = FALSE,
-                                  synergy.var = NULL, allow.missing = TRUE)
+\dontshow{
+sim.data.sub <- sim.data \%>\% filter(dt <= '2015-05-01')
+sim.promotion.sub <- sim.promotion \%>\% filter(start_dt <= '2015-05-01')
+pri1 <- promotionImpact(data=sim.data.sub, promotion=sim.promotion.sub, 
+                       time.field = 'dt', target.field = 'simulated_sales', 
+                       trend = FALSE, period = NULL, structural.change = FALSE,
+                       logged = TRUE, differencing = TRUE, synergy.promotion = FALSE,
+                       synergy.var = NULL, allow.missing = TRUE)
+}
+\donttest{
+pri1 <- promotionImpact(data=sim.data, promotion=sim.promotion, 
+                       time.field = 'dt', target.field = 'simulated_sales', 
+                       trend = FALSE, period = NULL, structural.change = FALSE,
+                       logged = TRUE, differencing = TRUE, synergy.promotion = FALSE,
+                       synergy.var = NULL, allow.missing = TRUE)
 out <- detectOutliers(model = pri1, 
                       threshold = list(cooks.distance=1, dfbetas=1, dffits=2), option = 1)
+}
 }

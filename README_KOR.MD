@@ -6,6 +6,10 @@ promotionImpact는 타겟 지표(일매출, DAU 등)에 대한 프로모션의 �
 
 ## 설치 방법
 R에서 아래 코드를 실행하시면 됩니다.
+```
+install.packages("promotionImpact")
+```
+혹은, 아래 코드를 실행시키면 Github 버전이 다운로드 됩니다.
 
 ```
 library(devtools)

@@ -8,9 +8,17 @@ This package provides convenient tools for converting promotion schedule into du
 Just run the code below in R.
 
 ```
+install.packages("promotionImpact")
+```
+for CRAN version.
+
+Or, 
+
+```
 library(devtools)
 devtools::install_github("ncsoft/promotionImpact")
 ```
+for GitHub version.
 
 To install properly, you should install Rtools for your R version at https://cran.r-project.org/bin/windows/Rtools/.
 Note that when you run the install_github command, you are asked if you want to update other packages. Even if you select 'None', promotionImpact will be installed successfully.

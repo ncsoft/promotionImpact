@@ -60,11 +60,9 @@ promotionImpact
 promotionImpact is for analysis & measurement of the effectiveness of promotions, controlling for some prespeficied or estimated control variables.
 }
 \examples{
-sim.data$month_start <- ifelse(substr(as.character(sim.data$dt),9,10) == '01', 1, 0)
-pri1 <- promotionImpact(data=sim.data, promotion=sim.promotion.sales, 
-                        time.field = 'dt', target.field = 'simulated_sales', 
-                        dummy.field = 'month_start',
-                        trend = TRUE, period = 30.5, trend.param = 0.02, period.param = 2,
-                        logged = TRUE, differencing = TRUE, synergy.promotion = FALSE,
-                        synergy.var = NULL, allow.missing = TRUE)
+pri1 <- promotionImpact(data=sim.data, promotion=sim.promotion, 
+                       time.field = 'dt', target.field = 'simulated_sales', 
+                       trend = FALSE, period = NULL, structural.change = FALSE,
+                       logged = TRUE, differencing = TRUE, synergy.promotion = FALSE,
+                       synergy.var = NULL, allow.missing = TRUE)
 }

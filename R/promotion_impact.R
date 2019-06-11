@@ -26,7 +26,7 @@
 #' @import Rcpp
 #' @import ggplot2
 #' @import scales
-#' @import prophet
+#' @importFrom prophet prophet add_seasonality fit.prophet prophet_plot_components
 #' @importFrom ggpubr ggarrange
 #' @importFrom KernSmooth locpoly
 #' @importFrom stringr str_detect
@@ -35,16 +35,12 @@
 #' @importFrom data.table dcast
 #' @importFrom utils capture.output tail combn
 #' @examples 
-#' sim.data$month_start <- ifelse(substr(as.character(sim.data$dt),9,10) == '01', 1, 0)
-#' pri1 <- promotionImpact(data=sim.data, promotion=sim.promotion.sales, 
-#'                         time.field = 'dt', target.field = 'simulated_sales', 
-#'                         dummy.field = 'month_start',
-#'                         trend = TRUE, period = 30.5, trend.param = 0.02, period.param = 2,
-#'                         logged = TRUE, differencing = TRUE, synergy.promotion = FALSE,
-#'                         synergy.var = NULL, allow.missing = TRUE)
+#' pri1 <- promotionImpact(data=sim.data, promotion=sim.promotion, 
+#'                        time.field = 'dt', target.field = 'simulated_sales', 
+#'                        trend = FALSE, period = NULL, structural.change = FALSE,
+#'                        logged = TRUE, differencing = TRUE, synergy.promotion = FALSE,
+#'                        synergy.var = NULL, allow.missing = TRUE)
 #' @export promotionImpact
-
-
 
 promotionImpact <- function(data, promotion
                             ,time.field = 'date', target.field = 'value', dummy.field = NULL
@@ -97,6 +93,9 @@ promotionImpact <- function(data, promotion
         }
       }
       
+      
+      
+      
       promotion[,'date'] <- promotion[,'start_date'] + ((promotion[,'dayPassed'] - 1) * 86400)
       promotion <- promotion[,!colnames(promotion) %in% c('duration','dayPassed')]
       
@@ -123,15 +122,15 @@ promotionImpact <- function(data, promotion
       residual <- data.frame(date = data[,'date'])
       residual[,'residual'] <- residuals
       
-      promotion <- promotion %>% dplyr::left_join(residual, by = c('date'='date'))
+      promotion <- left_join(promotion, residual, by = c('date'='date'))
       
       promotion <- promotion[promotion[,'start_date'] >= min(data[,'date']) & promotion[,'end_date'] <= max(data[,'date']),]
       
       promotion[,'residual'] <- (promotion[,'residual'] - min(promotion[,'residual'])) / (max(promotion[,'residual']) - min(promotion$residual))
       
-      promotion <- promotion %>% dplyr::add_count(date) %>% as.data.frame
-      promotion <- promotion %>% dplyr::mutate(residual = residual/n)
-      promotion <- promotion %>% dplyr::select(-n)
+      promotion <- as.data.frame(add_count(promotion, date))
+      promotion <- dplyr::mutate(promotion, residual = residual/n)
+      promotion <- dplyr::select(promotion, -n)
       
       smoothvar <- create.smooth.vars(target.data = data[ ,c('date', 'value')], promotion.data = promotion,
                                       smooth.except.date = smooth.except.date, smooth.bandwidth = smooth.bandwidth,
@@ -164,7 +163,7 @@ promotionImpact <- function(data, promotion
       
     }
     
-    input.data <- data %>% dplyr::left_join(smoothvar$data, by = c('date'='date', 'value'='value'))
+    input.data <- dplyr::left_join(data, smoothvar$data, by = c('date'='date', 'value'='value'))
     bmname <- unique(promotion[,'pro_tag'])
     
     if( synergy.promotion == TRUE ){
@@ -197,13 +196,13 @@ promotionImpact <- function(data, promotion
     effects <- data.frame(matrix(nrow = 0, ncol = length(unique(promotion[,'pro_tag']))))
     names(effects) <- unique(promotion[,'pro_tag'])
     
-    if (logged == F) {
+    if (logged == FALSE) {
       
       for (i in unique(promotion[,'pro_tag'])) {
         effects[1, i] <- model$model$coefficients[i][[1]] * smoothvar[['smooth_value_mean']][[i]] 
       }
       
-    } else if (logged == T) {
+    } else if (logged == TRUE) {
       
       for (i in unique(promotion[,'pro_tag'])) {
         effects[1, i] <- ( exp(model$model$coefficients[i][[1]] * smoothvar[['smooth_value_mean']][[i]]) - 1 ) * 100  
@@ -217,26 +216,26 @@ promotionImpact <- function(data, promotion
     
     dummyvar <- create.dummy.vars(data[ c('date','value')], promotion, tovar.col = 'pro_tag')
     
-    input.data <- dummyvar %>% dplyr::left_join(data, by = c('date'='date', 'value'='value'))
+    input.data <- dplyr::left_join(dummyvar, data, by = c('date'='date', 'value'='value'))
     
     model <- promotion.model(input.data, time.field = 'date', target.field = 'value', dummy.field = dummy.field,
                              trend = trend, period = period, structural.change = structural.change,
                              trend.param = trend.param, period.param = period.param, logged=logged, differencing=differencing)
     
-    if (differencing == T) {
+    if (differencing == TRUE) {
       warning("Differencing with dummy promotion variables is not recommended. The interpretation of the effects will be significantly different.")
     }
     
     effects <- data.frame(matrix(nrow = 0, ncol = length(unique(promotion[,'pro_tag']))))
     names(effects) <- unique(promotion[,'pro_tag'])
     
-    if (logged == F) {
+    if (logged == FALSE) {
       
       for (i in unique(promotion[,'pro_tag'])) {
         effects[1, i] <- model$model$coefficients[i][[1]] 
       }
       
-    } else if (logged == T) {
+    } else if (logged == TRUE) {
       
       for (i in unique(promotion[,'pro_tag'])) {
         effects[1, i] <- ( exp(model$model$coefficients[i][[1]]) - 1 ) * 100 
@@ -259,6 +258,9 @@ promotionImpact <- function(data, promotion
 }
 
 
+#' @name promotion.model
+#' @title generate final input data and fit promotion model
+#' @keywords internal
 promotion.model <- function(data, time.field = 'date', target.field = 'value', dummy.field = NULL
                             ,logged = TRUE, differencing = TRUE
                             ,trend = TRUE, period = 'auto', structural.change = FALSE
@@ -282,7 +284,7 @@ promotion.model <- function(data, time.field = 'date', target.field = 'value', d
       if (period == 'auto') {
         prophet.model <- suppressMessages(prophet::prophet(prophet.data, changepoint.prior.scale = trend.param))
       } else if (class(period) == 'numeric' & length(period) == 1){
-        prophet.model <- prophet::prophet(weekly.seasonality = F, yearly.seasonality = F, changepoint.prior.scale = trend.param)
+        prophet.model <- prophet::prophet(weekly.seasonality = FALSE, yearly.seasonality = FALSE, changepoint.prior.scale = trend.param)
         prophet.model <- prophet::add_seasonality(prophet.model, name = 'custom_period', period, fourier.order = period.param)
         prophet.model <- suppressMessages(prophet::fit.prophet(prophet.model, prophet.data))
       } else {
@@ -304,20 +306,20 @@ promotion.model <- function(data, time.field = 'date', target.field = 'value', d
     if (!is.null(period) == FALSE) {
       data[,'trend_value'] <- trend.component
       trend.period.field <- 'trend_value'
-      trend.period.graph <- prophet::prophet_plot_components(prophet.model, prophet.fitted, render_plot = F)[[1]]
+      trend.period.graph <- prophet::prophet_plot_components(prophet.model, prophet.fitted, render_plot = FALSE)[[1]]
       
     } else if (trend == FALSE) {
       data[,'period_value'] <- period.component + mean(data[,target.field])
       trend.period.field <- 'period_value'
       for(i in seq(2,period.cnt+1)){
-        trend.period.graph[[i-1]] <- prophet::prophet_plot_components(prophet.model, prophet.fitted, render_plot = F)[[i]]
+        trend.period.graph[[i-1]] <- prophet::prophet_plot_components(prophet.model, prophet.fitted, render_plot = FALSE)[[i]]
       }
       trend.period.graph <- ggpubr::ggarrange(plotlist = trend.period.graph, nrow = period.cnt, ncol = 1)
       
     } else {
       data[,'trend_period_value'] <- trend.component + period.component
       trend.period.field <- 'trend_period_value'
-      trend.period.graph <- ggpubr::ggarrange(plotlist = prophet::prophet_plot_components(prophet.model, prophet.fitted, render_plot = F), nrow = period.cnt+1, ncol = 1)
+      trend.period.graph <- ggpubr::ggarrange(plotlist = prophet::prophet_plot_components(prophet.model, prophet.fitted, render_plot = FALSE), nrow = period.cnt+1, ncol = 1)
     }
     
     
@@ -383,7 +385,7 @@ promotion.model <- function(data, time.field = 'date', target.field = 'value', d
     if(trend == TRUE | !is.null(period) == TRUE){
       data[2:nrow(data), trend.period.field] <- diff(as.matrix(data[trend.period.field]))
     }
-    data <- data %>% dplyr::slice(-1)
+    data <- dplyr::slice(data, -1)
   }
   
   
@@ -437,6 +439,9 @@ promotion.model <- function(data, time.field = 'date', target.field = 'value', d
   
 }
 
+#' @name value_fit_plot
+#' @title generate ggplot with fitted and target values
+#' @keywords internal
 value_fit_plot <- function(data){
   names(data) <- c('dt','value','fit')
   m.data <- reshape2::melt(data, id.vars = 'dt')
@@ -453,7 +458,9 @@ value_fit_plot <- function(data){
 }
 
 
-
+#' @name create.dummy.vars
+#' @title generate data.frame with dummy variables for each promotion period
+#' @keywords internal
 create.dummy.vars <- function(target.data, promotion.data, tovar.col = 'pro_id') {
   
   if (!tovar.col %in% names(promotion.data)) {
@@ -496,14 +503,16 @@ create.dummy.vars <- function(target.data, promotion.data, tovar.col = 'pro_id')
     }
   }
   
-  target.data.dummy <- merge(target.data, event.dummy, by='date', all.x=T)
+  target.data.dummy <- merge(target.data, event.dummy, by='date', all.x = TRUE)
   
   return(target.data.dummy)
   
 }
 
 
-
+#' @name create.smooth.vars
+#' @title calculate smoothed values imitated promotion sales
+#' @keywords internal
 create.smooth.vars <- function(target.data, promotion.data, smooth.except.date = NULL, smooth.bandwidth = 2,
                                smooth.origin = 'all', smooth.var.sum = TRUE, smooth.scale = 'minmax') {
   
@@ -678,7 +687,7 @@ create.smooth.vars <- function(target.data, promotion.data, smooth.except.date =
         smooth.value[[g]][[h]][,4] <- data.frame(pro_tag=g)
         
         if (h %in% pro.nm.uid.cut) {
-          smooth.value[[g]][[h]] <- smooth.value[[g]][[h]] %>% dplyr::filter(date >= min(target.data$date) & date <= max(target.data$date))
+          smooth.value[[g]][[h]] <- dplyr::filter(smooth.value[[g]][[h]], date >= min(target.data$date) & date <= max(target.data$date))
         }
         
         smooth.value.vector[[g]] <- c(smooth.value.vector[[g]], smooth.value[[g]][[h]][,2])
@@ -716,11 +725,11 @@ create.smooth.vars <- function(target.data, promotion.data, smooth.except.date =
       }
     }
   } else {
-    pro.vars <- merge(data.frame(date=target.data$date), data.table::dcast(dt.tagvalue, date~pro_tag, value.var="smoothing.value", sum), by='date', all.x=T)
+    pro.vars <- merge(data.frame(date=target.data$date), data.table::dcast(dt.tagvalue, date~pro_tag, value.var="smoothing.value", sum), by='date', all.x = TRUE)
     pro.vars[is.na(pro.vars)] <- 0 
   }
   
-  target.data.with.vars <- merge(target.data, pro.vars, by='date', all.x=T)
+  target.data.with.vars <- merge(target.data, pro.vars, by='date', all.x = TRUE)
   
   if (smooth.origin == 'tag') {
     result <- list(data = target.data.with.vars,
@@ -741,7 +750,9 @@ create.smooth.vars <- function(target.data, promotion.data, smooth.except.date =
   return(result)
 }
 
-
+#' @name format_time
+#' @title unify date format
+#' @keywords internal
 format_time <- function(data) {
   if (class(data)[1] == "POSIXlt" | class(data)[1] == "POSIXct" ) {
     return(data)
@@ -798,13 +809,24 @@ format_time <- function(data) {
 #' @param option The number of indicators that must be greater than the threshold values to be outliers.
 #' @importFrom stats AIC acf as.formula as.ts cooks.distance density dfbetas dffits dnorm lm predict sd shapiro.test
 #' @importFrom utils tail
-#' @examples pri1 <- promotionImpact(data=sim.data, promotion=sim.promotion.sales, 
-#'                                   time.field = 'dt', target.field = 'simulated_sales', 
-#'                                   trend = FALSE, period = 30.5,
-#'                                   logged = TRUE, differencing = TRUE, synergy.promotion = FALSE,
-#'                                   synergy.var = NULL, allow.missing = TRUE)
+#' @examples \dontshow{
+#' sim.data.sub <- sim.data %>% filter(dt <= '2015-05-01')
+#' sim.promotion.sub <- sim.promotion %>% filter(start_dt <= '2015-05-01')
+#' pri1 <- promotionImpact(data=sim.data.sub, promotion=sim.promotion.sub, 
+#'                        time.field = 'dt', target.field = 'simulated_sales', 
+#'                        trend = FALSE, period = NULL, structural.change = FALSE,
+#'                        logged = TRUE, differencing = TRUE, synergy.promotion = FALSE,
+#'                        synergy.var = NULL, allow.missing = TRUE)
+#' }
+#' \donttest{
+#' pri1 <- promotionImpact(data=sim.data, promotion=sim.promotion, 
+#'                        time.field = 'dt', target.field = 'simulated_sales', 
+#'                        trend = FALSE, period = NULL, structural.change = FALSE,
+#'                        logged = TRUE, differencing = TRUE, synergy.promotion = FALSE,
+#'                        synergy.var = NULL, allow.missing = TRUE)
 #' out <- detectOutliers(model = pri1, 
 #'                       threshold = list(cooks.distance=1, dfbetas=1, dffits=2), option = 1)
+#'}
 #' @export detectOutliers
 
 detectOutliers<-function(model, threshold=list(cooks.distance=1, dfbetas=1, dffits=2), option=2){
@@ -830,10 +852,9 @@ detectOutliers<-function(model, threshold=list(cooks.distance=1, dfbetas=1, dffi
     
   }
   
-  if(as.Date(model$model$final_input_data$date %>% tail(1)) %in% as.Date(as.POSIXct(outliers, origin='1970-01-01'))){
+  if(as.Date(tail(model$model$final_input_data$date, 1)) %in% as.Date(as.POSIXct(outliers, origin='1970-01-01'))){
     
-    outliers <- as.POSIXct(outliers, origin='1970-01-01')[! as.Date(model$model$final_input_data$date %>% 
-                                                                      tail(1)) %in% as.Date(as.POSIXct(outliers, origin='1970-01-01'))]
+    outliers <- as.POSIXct(outliers, origin='1970-01-01')[! as.Date(tail(model$model$final_input_data$date, 1)) %in% as.Date(as.POSIXct(outliers, origin='1970-01-01'))]
   }
   
   index <- which(model$model$final_input_data$date %in% outliers)
@@ -866,6 +887,22 @@ detectOutliers<-function(model, threshold=list(cooks.distance=1, dfbetas=1, dffi
 #' @importFrom crayon italic bold green
 #' @importFrom utils tail
 #' @importFrom stats AIC acf as.formula as.ts cooks.distance density dfbetas dffits dnorm lm predict sd shapiro.test
+#' @examples \dontshow{
+#' sim.data.sub <- sim.data %>% filter(dt <= '2015-05-01')
+#' sim.promotion.sub <- sim.promotion %>% filter(start_dt <= '2015-05-01')
+#' pri1 <- promotionImpact(data=sim.data.sub, promotion=sim.promotion.sub, 
+#'                        time.field = 'dt', target.field = 'simulated_sales', 
+#'                        trend = FALSE, period = NULL, structural.change = FALSE,
+#'                        logged = TRUE, differencing = TRUE, synergy.promotion = FALSE,
+#'                        synergy.var = NULL, allow.missing = TRUE)
+#' }
+#' \donttest{
+#' comparison <- compareModels(data = sim.data, promotion = sim.promotion.sales,
+#'                             fix = list(logged = T, differencing = T, smooth.origin='all',
+#'                                        trend = FALSE, period = NULL), 
+#'                             time.field = 'dt', target.field = 'simulated_sales', 
+#'                             trend.param = 0.02, period.param = 2)
+#'} 
 #' @export compareModels
 
 
@@ -1081,7 +1118,7 @@ compareModels <- function(data, promotion, fix=list(logged = TRUE, differencing 
   fitted_data <- predict(model[[which.min(params$AIC)]]$model$model, interval = 'confidence')
   fitted_data <- cbind(fitted_data, model[[which.min(params$AIC)]]$model$final_input_data[,c('date','value')])
   fitted_data$date <- as.Date(fitted_data$date)
-  gg_fin_dat <- fitted_data %>% tail(100)
+  gg_fin_dat <- tail(fitted_data, 100)
   final_plot<- ggplot()+theme_bw()+
     with(gg_fin_dat, geom_ribbon(aes(ymin=lwr,ymax=upr, fill='confidence'),alpha=0.7))+
     with(gg_fin_dat, geom_point(aes(date, fit, color='fitted')))+
