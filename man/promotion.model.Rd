@@ -4,10 +4,19 @@
 \alias{promotion.model}
 \title{generate final input data and fit promotion model}
 \usage{
-promotion.model(data, time.field = "date", target.field = "value",
-  dummy.field = NULL, logged = TRUE, differencing = TRUE,
-  trend = TRUE, period = "auto", structural.change = FALSE,
-  trend.param = 0.05, period.param = 3)
+promotion.model(
+  data,
+  time.field = "date",
+  target.field = "value",
+  dummy.field = NULL,
+  logged = TRUE,
+  differencing = TRUE,
+  trend = TRUE,
+  period = "auto",
+  structural.change = FALSE,
+  trend.param = 0.05,
+  period.param = 3
+)
 }
 \description{
 generate final input data and fit promotion model

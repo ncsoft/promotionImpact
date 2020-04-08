@@ -603,7 +603,7 @@ create.smooth.vars <- function(target.data, promotion.data, smooth.except.date =
       }
     }
     
-    smooth.means.tag[[ii]] <- data.frame(index = 1:401, smooth_mean = rowMeans(sapply(smooth.list[[ii]], unlist)))
+    smooth.means.tag[[ii]] <- data.frame(index = 1:401, smooth_mean = apply(cbind(NA, matrix(unlist(smooth.list[[ii]]), nrow=401)), 1, mean, na.rm = TRUE))
     
     if (smooth.scale == 'minmax') {
       smooth.means.tag[[ii]][,'smooth_mean'] <- (smooth.means.tag[[ii]][,'smooth_mean'] - min(smooth.means.tag[[ii]][,'smooth_mean'])) / (max(smooth.means.tag[[ii]][,'smooth_mean']) - min(smooth.means.tag[[ii]][,'smooth_mean']))
@@ -898,7 +898,7 @@ detectOutliers<-function(model, threshold=list(cooks.distance=1, dfbetas=1, dffi
 #' }
 #' \donttest{
 #' comparison <- compareModels(data = sim.data, promotion = sim.promotion.sales,
-#'                             fix = list(logged = T, differencing = T, smooth.origin='all',
+#'                             fix = list(logged = TRUE, differencing = TRUE, smooth.origin='all',
 #'                                        trend = FALSE, period = NULL), 
 #'                             time.field = 'dt', target.field = 'simulated_sales', 
 #'                             trend.param = 0.02, period.param = 2)

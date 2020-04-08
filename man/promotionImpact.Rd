@@ -4,13 +4,28 @@
 \alias{promotionImpact}
 \title{estimate effectiveness of promotions}
 \usage{
-promotionImpact(data, promotion, time.field = "date",
-  target.field = "value", dummy.field = NULL, trend = TRUE,
-  period = "auto", structural.change = FALSE, trend.param = 0.05,
-  period.param = 3, var.type = "smooth", smooth.except.date = NULL,
-  smooth.bandwidth = 2, smooth.origin = "all", smooth.var.sum = TRUE,
-  logged = TRUE, differencing = TRUE, synergy.promotion = FALSE,
-  synergy.var = NULL, allow.missing = TRUE)
+promotionImpact(
+  data,
+  promotion,
+  time.field = "date",
+  target.field = "value",
+  dummy.field = NULL,
+  trend = TRUE,
+  period = "auto",
+  structural.change = FALSE,
+  trend.param = 0.05,
+  period.param = 3,
+  var.type = "smooth",
+  smooth.except.date = NULL,
+  smooth.bandwidth = 2,
+  smooth.origin = "all",
+  smooth.var.sum = TRUE,
+  logged = TRUE,
+  differencing = TRUE,
+  synergy.promotion = FALSE,
+  synergy.var = NULL,
+  allow.missing = TRUE
+)
 }
 \arguments{
 \item{data}{Dataframe containing date, target variable, and some additional time dummies that the researcher wants to account for.}

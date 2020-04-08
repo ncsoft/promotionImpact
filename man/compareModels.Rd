@@ -4,11 +4,21 @@
 \alias{compareModels}
 \title{compare several models}
 \usage{
-compareModels(data, promotion, fix = list(logged = TRUE, differencing =
-  TRUE), time.field = "dt", target.field = "sales",
-  dummy.field = NULL, trend.param = 0.05, period.param = 3,
-  var.type = "smooth", smooth.except.date = NULL,
-  smooth.bandwidth = 2, smooth.var.sum = TRUE, allow.missing = TRUE)
+compareModels(
+  data,
+  promotion,
+  fix = list(logged = TRUE, differencing = TRUE),
+  time.field = "dt",
+  target.field = "sales",
+  dummy.field = NULL,
+  trend.param = 0.05,
+  period.param = 3,
+  var.type = "smooth",
+  smooth.except.date = NULL,
+  smooth.bandwidth = 2,
+  smooth.var.sum = TRUE,
+  allow.missing = TRUE
+)
 }
 \arguments{
 \item{data}{Dataframe containing date, target variable, and some additional time dummies that the researcher wants to account for.}
@@ -55,7 +65,7 @@ pri1 <- promotionImpact(data=sim.data.sub, promotion=sim.promotion.sub,
 }
 \donttest{
 comparison <- compareModels(data = sim.data, promotion = sim.promotion.sales,
-                            fix = list(logged = T, differencing = T, smooth.origin='all',
+                            fix = list(logged = TRUE, differencing = TRUE, smooth.origin='all',
                                        trend = FALSE, period = NULL), 
                             time.field = 'dt', target.field = 'simulated_sales', 
                             trend.param = 0.02, period.param = 2)

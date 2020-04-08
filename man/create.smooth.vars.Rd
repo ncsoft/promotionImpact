@@ -4,10 +4,15 @@
 \alias{create.smooth.vars}
 \title{calculate smoothed values imitated promotion sales}
 \usage{
-create.smooth.vars(target.data, promotion.data,
-  smooth.except.date = NULL, smooth.bandwidth = 2,
-  smooth.origin = "all", smooth.var.sum = TRUE,
-  smooth.scale = "minmax")
+create.smooth.vars(
+  target.data,
+  promotion.data,
+  smooth.except.date = NULL,
+  smooth.bandwidth = 2,
+  smooth.origin = "all",
+  smooth.var.sum = TRUE,
+  smooth.scale = "minmax"
+)
 }
 \description{
 calculate smoothed values imitated promotion sales

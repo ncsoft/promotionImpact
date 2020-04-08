@@ -4,8 +4,11 @@
 \alias{detectOutliers}
 \title{detect some outliers}
 \usage{
-detectOutliers(model, threshold = list(cooks.distance = 1, dfbetas = 1,
-  dffits = 2), option = 2)
+detectOutliers(
+  model,
+  threshold = list(cooks.distance = 1, dfbetas = 1, dffits = 2),
+  option = 2
+)
 }
 \arguments{
 \item{model}{Execution result object : promotionImpact}
